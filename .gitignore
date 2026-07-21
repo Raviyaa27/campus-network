@@ -1,0 +1,28 @@
+# Execution logs (keep the directory, ignore generated logs)
+netmiko/logs/*.log
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Ansible
+*.retry
+ansible/*.log
+
+# GNS3 runtime artefacts
+*.gns3_backup
+project-files/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Never commit real credentials
+netmiko/inventory/secrets.yml
+ansible/vault_pass.txt
