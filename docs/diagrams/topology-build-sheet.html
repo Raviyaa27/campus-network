@@ -1,0 +1,573 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>EE8203 Campus Network — GNS3 Build Sheet</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 12mm 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 9.5pt; color: #1a1a1a; margin: 0; line-height: 1.45;
+  }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+
+  h1 { font-size: 16pt; margin: 0 0 2px 0; color: #0b3d64; }
+  h2 { font-size: 11pt; margin: 10px 0 4px 0; color: #0b3d64;
+       border-bottom: 1.5px solid #0b3d64; padding-bottom: 2px; }
+  h3 { font-size: 9.5pt; margin: 8px 0 3px 0; color: #24618c; }
+  .sub { font-size: 8.8pt; color: #555; margin: 0 0 6px 0; }
+
+  table { border-collapse: collapse; width: 100%; margin: 4px 0 8px 0; font-size: 8.4pt; }
+  th { background: #0b3d64; color: #fff; text-align: left; padding: 3.5px 6px; font-weight: 600; }
+  td { border: 1px solid #c8d4dd; padding: 3px 6px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f4f8fb; }
+  td.port { font-family: Consolas, monospace; font-size: 8.2pt; color: #0b3d64; font-weight: 600; }
+  td.ip   { font-family: Consolas, monospace; font-size: 8.2pt; }
+
+  .two-col { display: flex; gap: 16px; }
+  .two-col > div { flex: 1; }
+
+  .note { background: #fff8e6; border-left: 3px solid #d9a300; padding: 5px 9px;
+          margin: 6px 0; font-size: 8.5pt; }
+  .warn { background: #fdf0ef; border-left: 3px solid #c0392b; padding: 5px 9px;
+          margin: 6px 0; font-size: 8.5pt; }
+  .ok   { background: #eef7f0; border-left: 3px solid #2e7d47; padding: 5px 9px;
+          margin: 6px 0; font-size: 8.5pt; }
+  code { font-family: Consolas, monospace; background: #eef2f5; padding: 1px 4px;
+         border-radius: 2px; font-size: 8.6pt; }
+
+  ol.steps { margin: 6px 0 6px 18px; padding: 0; }
+  ol.steps li { margin-bottom: 5px; }
+  ul.tight { margin: 3px 0 5px 16px; padding: 0; }
+  ul.tight li { margin-bottom: 1.5px; }
+
+  .chk { font-family: Consolas, monospace; font-size: 11pt; color: #0b3d64; }
+  .legend { font-size: 8.4pt; color: #444; margin-top: 4px; }
+  .legend span { margin-right: 18px; }
+  .sw { display:inline-block; width:26px; height:0; border-top:2.5px solid; vertical-align:middle; margin-right:5px; }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 : DIAGRAM ============ -->
+<div class="page">
+  <h1>EE8203 — Campus Network Topology</h1>
+  <p class="sub">Faculty of Engineering, University of Ruhuna &nbsp;·&nbsp; GNS3 build sheet &nbsp;·&nbsp; v0.1</p>
+
+  <svg viewBox="0 0 1120 620" width="100%" height="128mm"
+       preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <style>
+        .box  { stroke-width: 1.6; rx: 4; }
+        .rtr  { fill: #e8f0f8; stroke: #1f5f96; }
+        .core { fill: #dbe9f5; stroke: #0b3d64; stroke-width: 2.2; }
+        .dist { fill: #e9f2ea; stroke: #2e7d47; }
+        .acc  { fill: #fdf3e3; stroke: #b8860b; }
+        .host { fill: #f2f2f4; stroke: #777; }
+        .cld  { fill: #f0f0f2; stroke: #666; }
+        .nm   { font-family: "Segoe UI", Arial, sans-serif; font-size: 11px; font-weight: 700; fill: #14232e; text-anchor: middle; }
+        .nms  { font-family: "Segoe UI", Arial, sans-serif; font-size: 9px; font-weight: 600; fill: #14232e; text-anchor: middle; }
+        .rl   { font-family: "Segoe UI", Arial, sans-serif; font-size: 7.5px; fill: #5a6a75; text-anchor: middle; }
+        .pt   { font-family: Consolas, monospace; font-size: 6.8px; fill: #7a5230; }
+        .lnk  { stroke: #4a4a4a; stroke-width: 1.5; fill: none; }
+        .trk  { stroke: #2e7d47; stroke-width: 1.5; fill: none; }
+        .rtd  { stroke: #1f5f96; stroke-width: 2; fill: none; }
+        .po   { stroke: #b8860b; stroke-width: 2.6; fill: none; }
+        .tier { font-family: "Segoe UI", Arial, sans-serif; font-size: 9px; font-weight: 700; fill: #9aa7b1; letter-spacing: 1.2px; }
+      </style>
+    </defs>
+
+    <!-- tier labels -->
+    <text class="tier" x="8" y="50">WAN</text>
+    <text class="tier" x="8" y="200">ROUTING</text>
+    <text class="tier" x="8" y="283">CORE</text>
+    <text class="tier" x="8" y="381">DISTRIBUTION</text>
+    <text class="tier" x="8" y="495">ACCESS</text>
+    <text class="tier" x="8" y="575">HOSTS</text>
+
+    <!-- ===== links (drawn first, under boxes) ===== -->
+    <!-- internet -> R-EDGE -->
+    <line class="rtd" x1="560" y1="62" x2="560" y2="98"/>
+    <text class="pt" x="578" y="80">Gi0/0</text>
+    <!-- R-EDGE -> R-CORE -->
+    <line class="rtd" x1="560" y1="140" x2="560" y2="174"/>
+    <text class="pt" x="524" y="152">Gi0/1</text>
+    <text class="pt" x="524" y="170">Gi0/1</text>
+    <!-- R-CORE -> cores -->
+    <line class="rtd" x1="530" y1="216" x2="410" y2="256"/>
+    <text class="pt" x="470" y="228">Gi0/2</text>
+    <text class="pt" x="415" y="250">Gi0/0</text>
+    <line class="rtd" x1="590" y1="216" x2="710" y2="256"/>
+    <text class="pt" x="652" y="228">Gi0/3</text>
+    <text class="pt" x="706" y="250">Gi0/0</text>
+    <!-- core peer link Po1 -->
+    <line class="po" x1="466" y1="272" x2="654" y2="272"/>
+    <line class="po" x1="466" y1="284" x2="654" y2="284"/>
+    <text class="rl" x="560" y="266" style="fill:#8a6508;font-weight:700">Po1 — LACP</text>
+    <text class="pt" x="490" y="298">Gi0/1-0/2</text>
+    <text class="pt" x="630" y="298">Gi0/1-0/2</text>
+
+    <!-- cores -> distribution (dual homed) -->
+    <!-- DEIE -->
+    <line class="trk" x1="360" y1="300" x2="150" y2="356"/>
+    <line class="trk" x1="680" y1="300" x2="176" y2="356"/>
+    <!-- DCEE -->
+    <line class="trk" x1="386" y1="300" x2="345" y2="356"/>
+    <line class="trk" x1="694" y1="300" x2="371" y2="356"/>
+    <!-- DMME -->
+    <line class="trk" x1="418" y1="300" x2="545" y2="356"/>
+    <line class="trk" x1="706" y1="300" x2="571" y2="356"/>
+    <!-- SW-A-DIS dual homed to cores -->
+    <line class="trk" x1="440" y1="300" x2="880" y2="356"/>
+    <line class="trk" x1="740" y1="300" x2="906" y2="356"/>
+    <text class="pt" x="800" y="330">Gi0/0 + Gi0/1</text>
+
+    <!-- distribution -> access -->
+    <line class="trk" x1="163" y1="398" x2="163" y2="470"/>
+    <text class="pt" x="185" y="436">Gi0/2</text>
+    <line class="trk" x1="358" y1="398" x2="358" y2="470"/>
+    <text class="pt" x="380" y="436">Gi0/2</text>
+    <line class="trk" x1="558" y1="398" x2="558" y2="470"/>
+    <text class="pt" x="580" y="436">Gi0/2</text>
+
+    <!-- access -> hosts -->
+    <line class="lnk" x1="140" y1="512" x2="105" y2="556"/>
+    <line class="lnk" x1="186" y1="512" x2="221" y2="556"/>
+    <line class="lnk" x1="335" y1="512" x2="300" y2="556"/>
+    <line class="lnk" x1="381" y1="512" x2="416" y2="556"/>
+    <line class="lnk" x1="535" y1="512" x2="500" y2="556"/>
+    <line class="lnk" x1="581" y1="512" x2="616" y2="556"/>
+    <!-- DIS hosts from SW-A-DIS (which sits at dist row) -->
+    <line class="lnk" x1="866" y1="398" x2="784" y2="470"/>
+    <line class="lnk" x1="879" y1="398" x2="855" y2="470"/>
+    <line class="lnk" x1="893" y1="398" x2="926" y2="470"/>
+    <line class="lnk" x1="907" y1="398" x2="997" y2="470"/>
+    <line class="lnk" x1="920" y1="398" x2="1068" y2="470"/>
+
+    <!-- ===== nodes ===== -->
+    <!-- internet cloud -->
+    <rect class="box cld" x="494" y="30" width="132" height="32"/>
+    <text class="nms" x="560" y="50">Internet (NAT cloud)</text>
+
+    <!-- R-EDGE -->
+    <rect class="box rtr" x="494" y="98" width="132" height="42"/>
+    <text class="nm" x="560" y="116">R-EDGE</text>
+    <text class="rl" x="560" y="130">IOSv · NAT · default rt</text>
+
+    <!-- R-CORE -->
+    <rect class="box rtr" x="494" y="174" width="132" height="42"/>
+    <text class="nm" x="560" y="192">R-CORE</text>
+    <text class="rl" x="560" y="206">IOSv · OSPF area 0</text>
+
+    <!-- SW-CORE-1 -->
+    <rect class="box core" x="334" y="256" width="132" height="44"/>
+    <text class="nm" x="400" y="274">SW-CORE-1</text>
+    <text class="rl" x="400" y="287">HSRP act 10·20·99</text>
+    <text class="rl" x="400" y="296">STP root 10·20·99</text>
+
+    <!-- SW-CORE-2 -->
+    <rect class="box core" x="654" y="256" width="132" height="44"/>
+    <text class="nm" x="720" y="274">SW-CORE-2</text>
+    <text class="rl" x="720" y="287">HSRP act 30·40</text>
+    <text class="rl" x="720" y="296">STP root 30·40</text>
+
+    <!-- distribution -->
+    <rect class="box dist" x="97" y="356" width="132" height="42"/>
+    <text class="nm" x="163" y="374">SW-D-DEIE</text>
+    <text class="rl" x="163" y="388">.99.99.11</text>
+
+    <rect class="box dist" x="292" y="356" width="132" height="42"/>
+    <text class="nm" x="358" y="374">SW-D-DCEE</text>
+    <text class="rl" x="358" y="388">.99.99.12</text>
+
+    <rect class="box dist" x="492" y="356" width="132" height="42"/>
+    <text class="nm" x="558" y="374">SW-D-DMME</text>
+    <text class="rl" x="558" y="388">.99.99.13</text>
+
+    <!-- SW-A-DIS (access, but homed to core) -->
+    <rect class="box acc" x="827" y="356" width="132" height="42"/>
+    <text class="nm" x="893" y="374">SW-A-DIS</text>
+    <text class="rl" x="893" y="388">.99.99.24 · to core</text>
+
+    <!-- access -->
+    <rect class="box acc" x="97" y="470" width="132" height="42"/>
+    <text class="nm" x="163" y="488">SW-A-DEIE</text>
+    <text class="rl" x="163" y="502">.99.99.21</text>
+
+    <rect class="box acc" x="292" y="470" width="132" height="42"/>
+    <text class="nm" x="358" y="488">SW-A-DCEE</text>
+    <text class="rl" x="358" y="502">.99.99.22</text>
+
+    <rect class="box acc" x="492" y="470" width="132" height="42"/>
+    <text class="nm" x="558" y="488">SW-A-DMME</text>
+    <text class="rl" x="558" y="502">.99.99.23</text>
+
+    <!-- hosts -->
+    <rect class="box host" x="62" y="556" width="86" height="30"/>
+    <text class="nms" x="105" y="568">PC-DEIE-1</text>
+    <text class="rl" x="105" y="580">.10.10.101 v10</text>
+    <rect class="box host" x="178" y="556" width="86" height="30"/>
+    <text class="nms" x="221" y="568">PC-DEIE-2</text>
+    <text class="rl" x="221" y="580">.10.10.102 v10</text>
+
+    <rect class="box host" x="257" y="556" width="86" height="30"/>
+    <text class="nms" x="300" y="568">PC-DCEE-1</text>
+    <text class="rl" x="300" y="580">.10.20.101 v20</text>
+    <rect class="box host" x="373" y="556" width="86" height="30"/>
+    <text class="nms" x="416" y="568">PC-DCEE-2</text>
+    <text class="rl" x="416" y="580">.10.20.102 v20</text>
+
+    <rect class="box host" x="457" y="556" width="86" height="30"/>
+    <text class="nms" x="500" y="568">PC-DMME-1</text>
+    <text class="rl" x="500" y="580">.10.30.101 v30</text>
+    <rect class="box host" x="573" y="556" width="86" height="30"/>
+    <text class="nms" x="616" y="568">PC-DMME-2</text>
+    <text class="rl" x="616" y="580">.10.30.102 v30</text>
+
+    <rect class="box host" x="750" y="470" width="68" height="30"/>
+    <text class="nms" x="784" y="482">PC-DIS-1</text>
+    <text class="rl" x="784" y="494">.40.101 v40</text>
+    <rect class="box host" x="821" y="470" width="68" height="30"/>
+    <text class="nms" x="855" y="482">PC-DIS-2</text>
+    <text class="rl" x="855" y="494">.40.102 v40</text>
+    <rect class="box host" x="892" y="470" width="68" height="30"/>
+    <text class="nms" x="926" y="482">VM-DHCP</text>
+    <text class="rl" x="926" y="494">.40.10 v40</text>
+    <rect class="box host" x="963" y="470" width="68" height="30"/>
+    <text class="nms" x="997" y="482">VM-ZABBIX</text>
+    <text class="rl" x="997" y="494">.40.20 v40</text>
+    <rect class="box host" x="1034" y="470" width="72" height="30"/>
+    <text class="nms" x="1070" y="482">VM-AUTO</text>
+    <text class="rl" x="1070" y="494">.99.100 v99</text>
+  </svg>
+
+  <div class="legend">
+    <span><span class="sw" style="border-color:#1f5f96"></span>Routed link (/30)</span>
+    <span><span class="sw" style="border-color:#2e7d47"></span>802.1Q trunk</span>
+    <span><span class="sw" style="border-color:#b8860b"></span>LACP EtherChannel (Po1)</span>
+    <span><span class="sw" style="border-color:#4a4a4a"></span>Access port</span>
+    <span>Host addresses abbreviated: <code>.40.101</code> = 10.10.40.101</span>
+  </div>
+
+  <div class="note">
+    <strong>Dual-homing is intentional.</strong> Each distribution switch and SW-A-DIS has two uplinks — one to
+    each core. This creates a Layer 2 loop by design; spanning tree blocks the redundant path and reactivates it
+    automatically on failure. STP root priority is aligned with the HSRP active role so the unblocked path always
+    leads to the active gateway.
+  </div>
+</div>
+
+<!-- ============ PAGE 2 : NODES + CABLING ============ -->
+<div class="page">
+  <h1>Node list and cabling</h1>
+  <p class="sub">Place and rename every node before cabling. Cable in batches A–D and verify each batch.</p>
+
+  <h2>Step 1 — Place and rename nodes</h2>
+  <table>
+    <tr><th style="width:14%">Qty</th><th style="width:26%">GNS3 template</th><th>Rename to</th><th style="width:12%">RAM each</th></tr>
+    <tr><td>2</td><td>Cisco IOSv 15.9(3)M6</td><td class="port">R-EDGE, R-CORE</td><td>512 MB</td></tr>
+    <tr><td>2</td><td>Cisco IOSvL2 15.2</td><td class="port">SW-CORE-1, SW-CORE-2</td><td>768 MB</td></tr>
+    <tr><td>3</td><td>Cisco IOSvL2 15.2</td><td class="port">SW-D-DEIE, SW-D-DCEE, SW-D-DMME</td><td>768 MB</td></tr>
+    <tr><td>4</td><td>Cisco IOSvL2 15.2</td><td class="port">SW-A-DEIE, SW-A-DCEE, SW-A-DMME, SW-A-DIS</td><td>768 MB</td></tr>
+    <tr><td>8</td><td>VPCS</td><td class="port">PC-DEIE-1/2, PC-DCEE-1/2, PC-DMME-1/2, PC-DIS-1/2</td><td>—</td></tr>
+    <tr><td>1</td><td>NAT cloud</td><td class="port">Internet</td><td>—</td></tr>
+    <tr><td>3</td><td>Ubuntu 22.04 (add later)</td><td class="port">VM-AUTO, VM-ZABBIX, VM-DHCP</td><td>2 GB / 2.5 GB / 512 MB</td></tr>
+  </table>
+
+  <div class="warn">
+    <strong>Rename each node as you place it.</strong> Renaming after cabling is how port maps drift out of sync
+    with the real topology — and the port map is what every later configuration step depends on.
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h2>Batch A — Routing spine (4 links)</h2>
+      <table>
+        <tr><th>From</th><th style="width:16%">Port</th><th>To</th><th style="width:16%">Port</th></tr>
+        <tr><td>Internet</td><td class="port">—</td><td>R-EDGE</td><td class="port">Gi0/0</td></tr>
+        <tr><td>R-EDGE</td><td class="port">Gi0/1</td><td>R-CORE</td><td class="port">Gi0/1</td></tr>
+        <tr><td>R-CORE</td><td class="port">Gi0/2</td><td>SW-CORE-1</td><td class="port">Gi0/0</td></tr>
+        <tr><td>R-CORE</td><td class="port">Gi0/3</td><td>SW-CORE-2</td><td class="port">Gi0/0</td></tr>
+      </table>
+
+      <h2>Batch B — Core peer link (2 links → Po1)</h2>
+      <table>
+        <tr><th>From</th><th style="width:16%">Port</th><th>To</th><th style="width:16%">Port</th></tr>
+        <tr><td>SW-CORE-1</td><td class="port">Gi0/1</td><td>SW-CORE-2</td><td class="port">Gi0/1</td></tr>
+        <tr><td>SW-CORE-1</td><td class="port">Gi0/2</td><td>SW-CORE-2</td><td class="port">Gi0/2</td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>Batch C — Dual-homed uplinks (8 links)</h2>
+      <table>
+        <tr><th>From</th><th style="width:14%">Port</th><th>To</th><th style="width:14%">Port</th></tr>
+        <tr><td>SW-D-DEIE</td><td class="port">Gi0/0</td><td>SW-CORE-1</td><td class="port">Gi0/3</td></tr>
+        <tr><td>SW-D-DEIE</td><td class="port">Gi0/1</td><td>SW-CORE-2</td><td class="port">Gi0/3</td></tr>
+        <tr><td>SW-D-DCEE</td><td class="port">Gi0/0</td><td>SW-CORE-1</td><td class="port">Gi1/0</td></tr>
+        <tr><td>SW-D-DCEE</td><td class="port">Gi0/1</td><td>SW-CORE-2</td><td class="port">Gi1/0</td></tr>
+        <tr><td>SW-D-DMME</td><td class="port">Gi0/0</td><td>SW-CORE-1</td><td class="port">Gi1/1</td></tr>
+        <tr><td>SW-D-DMME</td><td class="port">Gi0/1</td><td>SW-CORE-2</td><td class="port">Gi1/1</td></tr>
+        <tr><td>SW-A-DIS</td><td class="port">Gi0/0</td><td>SW-CORE-1</td><td class="port">Gi1/2</td></tr>
+        <tr><td>SW-A-DIS</td><td class="port">Gi0/1</td><td>SW-CORE-2</td><td class="port">Gi1/2</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ PAGE 3 : BATCH D + VLAN/HSRP ============ -->
+<div class="page">
+  <h1>Cabling batch D — access layer and hosts</h1>
+  <p class="sub">The final 11 links. After this batch the topology is fully cabled: 25 links in total.</p>
+
+  <h2>Batch D — Access uplinks and end hosts (11 links)</h2>
+  <div class="two-col">
+    <div>
+      <table>
+        <tr><th>From</th><th style="width:16%">Port</th><th>To</th><th style="width:16%">Port</th></tr>
+        <tr><td>SW-A-DEIE</td><td class="port">Gi0/0</td><td>SW-D-DEIE</td><td class="port">Gi0/2</td></tr>
+        <tr><td>SW-A-DCEE</td><td class="port">Gi0/0</td><td>SW-D-DCEE</td><td class="port">Gi0/2</td></tr>
+        <tr><td>SW-A-DMME</td><td class="port">Gi0/0</td><td>SW-D-DMME</td><td class="port">Gi0/2</td></tr>
+      </table>
+    </div>
+    <div>
+      <table>
+        <tr><th>Host</th><th>Switch</th><th style="width:14%">Port</th><th style="width:12%">VLAN</th></tr>
+        <tr><td>PC-DEIE-1 / PC-DEIE-2</td><td>SW-A-DEIE</td><td class="port">Gi1/0, Gi1/1</td><td>10</td></tr>
+        <tr><td>PC-DCEE-1 / PC-DCEE-2</td><td>SW-A-DCEE</td><td class="port">Gi1/0, Gi1/1</td><td>20</td></tr>
+        <tr><td>PC-DMME-1 / PC-DMME-2</td><td>SW-A-DMME</td><td class="port">Gi1/0, Gi1/1</td><td>30</td></tr>
+        <tr><td>PC-DIS-1 / PC-DIS-2</td><td>SW-A-DIS</td><td class="port">Gi1/0, Gi1/1</td><td>40</td></tr>
+        <tr><td>VM-DHCP</td><td>SW-A-DIS</td><td class="port">Gi1/3</td><td>40</td></tr>
+        <tr><td>VM-ZABBIX</td><td>SW-A-DIS</td><td class="port">Gi2/0</td><td>40</td></tr>
+        <tr><td>VM-AUTO</td><td>SW-A-DIS</td><td class="port">Gi2/1</td><td>99</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h2>What to expect once cabling is complete</h2>
+  <div class="two-col">
+    <div>
+      <h3>Normal at this stage</h3>
+      <ul class="tight">
+        <li>GNS3 may warn about a Layer 2 loop after batch C — this is by design, ignore it.</li>
+        <li>Every interface shows <code>down/down</code>. Nothing has been configured yet.</li>
+        <li>Switches boot to <code>Switch&gt;</code>, routers to <code>Router&gt;</code>.</li>
+        <li>Nothing pings. No addressing has been applied to any device.</li>
+        <li>IOSvL2 takes 2–4 minutes to boot. Wait for the prompt before assuming a fault.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Verify before configuring</h3>
+      <ul class="tight">
+        <li>Start only <strong>R-EDGE, R-CORE, SW-CORE-1, SW-CORE-2</strong> (~2.6 GB).</li>
+        <li>Each reaches a CLI prompt.</li>
+        <li><code>show ip interface brief</code> lists <code>Gi0/0</code>–<code>Gi0/3</code> on routers.</li>
+        <li><code>show ip interface brief</code> lists <code>Gi0/0</code>–<code>Gi3/3</code> on switches.</li>
+        <li>Save the project, then take a GNS3 snapshot named <code>00-cabled-baseline</code>.</li>
+      </ul>
+      <div class="note">
+        <strong>Take that snapshot.</strong> It is the clean state to roll back to whenever a later
+        configuration step goes wrong, and the MOP requires a documented rollback point before each
+        major change.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 4 : VLANs + HSRP ============ -->
+<div class="page">
+  <h1>VLAN and HSRP reference</h1>
+  <p class="sub">The VLAN scheme, and how the redundant core pair presents a single gateway to each subnet.</p>
+
+  <h2>VLANs</h2>
+  <table>
+    <tr><th style="width:8%">VLAN</th><th style="width:16%">Name</th><th style="width:14%">Department</th><th style="width:18%">Subnet</th><th style="width:18%">Gateway (HSRP VIP)</th><th>Purpose</th></tr>
+    <tr><td>10</td><td>VLAN_DEIE</td><td>DEIE</td><td class="ip">10.10.10.0/24</td><td class="ip">10.10.10.1</td><td>Engineering workstations</td></tr>
+    <tr><td>20</td><td>VLAN_DCEE</td><td>DCEE</td><td class="ip">10.10.20.0/24</td><td class="ip">10.10.20.1</td><td>Civil / Environmental hosts</td></tr>
+    <tr><td>30</td><td>VLAN_DMME</td><td>DMME</td><td class="ip">10.10.30.0/24</td><td class="ip">10.10.30.1</td><td>Mechanical / Manufacturing hosts</td></tr>
+    <tr><td>40</td><td>VLAN_DIS</td><td>DIS</td><td class="ip">10.10.40.0/24</td><td class="ip">10.10.40.1</td><td>Faculty IT hub / server farm</td></tr>
+    <tr><td>99</td><td>MGMT</td><td>All</td><td class="ip">10.99.99.0/24</td><td class="ip">10.99.99.1</td><td>Device management, SSH only</td></tr>
+    <tr><td>100</td><td>NATIVE</td><td>Trunks</td><td class="ip">none</td><td class="ip">none</td><td>Native (untagged) VLAN on all trunks</td></tr>
+  </table>
+
+  <h2>HSRP on the core pair</h2>
+  <table>
+    <tr><th style="width:8%">VLAN</th><th>SW-CORE-1 SVI</th><th>SW-CORE-2 SVI</th><th>Virtual IP</th><th style="width:10%">Group</th><th style="width:16%">Active (pri 110)</th><th style="width:16%">STP root</th></tr>
+    <tr><td>10</td><td class="ip">10.10.10.2</td><td class="ip">10.10.10.3</td><td class="ip">10.10.10.1</td><td>10</td><td>SW-CORE-1</td><td>SW-CORE-1</td></tr>
+    <tr><td>20</td><td class="ip">10.10.20.2</td><td class="ip">10.10.20.3</td><td class="ip">10.10.20.1</td><td>20</td><td>SW-CORE-1</td><td>SW-CORE-1</td></tr>
+    <tr><td>30</td><td class="ip">10.10.30.2</td><td class="ip">10.10.30.3</td><td class="ip">10.10.30.1</td><td>30</td><td>SW-CORE-2</td><td>SW-CORE-2</td></tr>
+    <tr><td>40</td><td class="ip">10.10.40.2</td><td class="ip">10.10.40.3</td><td class="ip">10.10.40.1</td><td>40</td><td>SW-CORE-2</td><td>SW-CORE-2</td></tr>
+    <tr><td>99</td><td class="ip">10.99.99.2</td><td class="ip">10.99.99.3</td><td class="ip">10.99.99.1</td><td>99</td><td>SW-CORE-1</td><td>SW-CORE-1</td></tr>
+  </table>
+
+  <div class="two-col">
+    <div class="note">
+      <strong>Why alternate the active role?</strong> Leaving one core as a cold standby wastes half the
+      core capacity. Splitting the VLANs means both switches forward traffic in normal operation, and
+      either one can carry everything after a failure. The standby keeps the default priority 100, and
+      <code>preempt</code> is enabled on both so the intended active switch reclaims its role once it
+      recovers.
+    </div>
+    <div class="note">
+      <strong>Why STP root must match HSRP active.</strong> If SW-CORE-1 is the gateway for VLAN 10 but
+      SW-CORE-2 is the STP root for it, every VLAN 10 packet reaches CORE-2 at Layer 2, crosses the peer
+      link to find its gateway on CORE-1, and comes back — turning Po1 into a bottleneck for no reason.
+      Aligning the two keeps the forwarding path direct.
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 5 : ADDRESSING ============ -->
+<div class="page">
+  <h1>Addressing reference</h1>
+  <p class="sub">Every address used in the build. Keep this page beside you while configuring.</p>
+
+  <div class="two-col">
+    <div>
+      <h2>Point-to-point routed links</h2>
+      <table>
+        <tr><th>Link</th><th>Subnet</th><th>Side A</th><th>Side B</th></tr>
+        <tr><td>R-EDGE ↔ Internet</td><td class="ip">203.0.113.0/24</td><td class="ip">.2 (Gi0/0)</td><td class="ip">.1 (gw)</td></tr>
+        <tr><td>R-EDGE ↔ R-CORE</td><td class="ip">10.255.255.0/30</td><td class="ip">.1 (Gi0/1)</td><td class="ip">.2 (Gi0/1)</td></tr>
+        <tr><td>R-CORE ↔ SW-CORE-1</td><td class="ip">10.255.255.4/30</td><td class="ip">.5 (Gi0/2)</td><td class="ip">.6 (Gi0/0)</td></tr>
+        <tr><td>R-CORE ↔ SW-CORE-2</td><td class="ip">10.255.255.8/30</td><td class="ip">.9 (Gi0/3)</td><td class="ip">.10 (Gi0/0)</td></tr>
+      </table>
+
+      <h2>Hosts and servers</h2>
+      <table>
+        <tr><th>Host</th><th>Address</th><th style="width:14%">VLAN</th></tr>
+        <tr><td>PC-DEIE-1 / -2</td><td class="ip">10.10.10.101 / .102</td><td>10</td></tr>
+        <tr><td>PC-DCEE-1 / -2</td><td class="ip">10.10.20.101 / .102</td><td>20</td></tr>
+        <tr><td>PC-DMME-1 / -2</td><td class="ip">10.10.30.101 / .102</td><td>30</td></tr>
+        <tr><td>PC-DIS-1 / -2</td><td class="ip">10.10.40.101 / .102</td><td>40</td></tr>
+        <tr><td>VM-DHCP</td><td class="ip">10.10.40.10</td><td>40</td></tr>
+        <tr><td>VM-ZABBIX</td><td class="ip">10.10.40.20</td><td>40</td></tr>
+        <tr><td>VM-AUTO</td><td class="ip">10.99.99.100</td><td>99</td></tr>
+      </table>
+
+      <div class="note">
+        Test hosts use static addresses so ACL results are reproducible. DHCP pools serve
+        <code>.150</code>–<code>.200</code> in each department VLAN.
+      </div>
+    </div>
+
+    <div>
+      <h2>Management addresses (VLAN 99)</h2>
+      <table>
+        <tr><th>Device</th><th>Address</th><th>Interface</th></tr>
+        <tr><td>SW-CORE-1</td><td class="ip">10.99.99.2/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-CORE-2</td><td class="ip">10.99.99.3/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-D-DEIE</td><td class="ip">10.99.99.11/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-D-DCEE</td><td class="ip">10.99.99.12/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-D-DMME</td><td class="ip">10.99.99.13/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-A-DEIE</td><td class="ip">10.99.99.21/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-A-DCEE</td><td class="ip">10.99.99.22/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-A-DMME</td><td class="ip">10.99.99.23/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>SW-A-DIS</td><td class="ip">10.99.99.24/24</td><td>SVI VLAN 99</td></tr>
+        <tr><td>R-CORE</td><td class="ip">10.99.0.1/32</td><td>Loopback0</td></tr>
+        <tr><td>R-EDGE</td><td class="ip">10.99.0.2/32</td><td>Loopback0</td></tr>
+      </table>
+
+      <div class="note">
+        All distribution and access switches use <code>10.99.99.1</code> — the VLAN 99 HSRP
+        virtual address — as their default gateway, so management reachability survives the
+        loss of either core switch. Routers sit outside VLAN 99 and are managed on loopbacks
+        advertised into OSPF.
+      </div>
+
+      <h3>SSH targets for automation</h3>
+      <div class="ok">
+        VM-AUTO (<code>10.99.99.100</code>) reaches every device in the management table above.
+        This list becomes the Netmiko inventory file and the Ansible inventory in weeks 5–8.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 6 : RAM + CHECKLIST ============ -->
+<div class="page">
+  <h1>Memory budget and build checklist</h1>
+
+  <h2>Why you cannot start every device</h2>
+  <div class="two-col">
+    <div>
+      <table>
+        <tr><th>Group</th><th>Devices</th><th style="width:18%">RAM</th></tr>
+        <tr><td>Core and routing</td><td>R-EDGE, R-CORE, SW-CORE-1, SW-CORE-2</td><td>2.6 GB</td></tr>
+        <tr><td>Distribution</td><td>SW-D-DEIE, SW-D-DCEE, SW-D-DMME</td><td>2.3 GB</td></tr>
+        <tr><td>Access</td><td>SW-A-DEIE / DCEE / DMME / DIS</td><td>3.1 GB</td></tr>
+        <tr><td>Servers</td><td>VM-AUTO, VM-ZABBIX, VM-DHCP</td><td>5.0 GB</td></tr>
+        <tr><td>GNS3 VM overhead</td><td>—</td><td>~1.5 GB</td></tr>
+        <tr><td>Windows host</td><td>—</td><td>~4.0 GB</td></tr>
+        <tr style="font-weight:700"><td colspan="2">Total if everything runs at once</td><td>~18.5 GB</td></tr>
+      </table>
+      <div class="warn">
+        The build host has <strong>16 GB</strong>. The topology is never run in full — devices are started
+        per phase as shown opposite.
+      </div>
+    </div>
+    <div>
+      <h3>Staged startup by phase</h3>
+      <table>
+        <tr><th>Phase</th><th>Start these</th><th style="width:16%">RAM</th></tr>
+        <tr><td>Baseline routing &amp; trunking</td><td>Core group + distribution</td><td>9.4 GB</td></tr>
+        <tr><td>VLANs &amp; host connectivity</td><td>+ access switches + VPCS</td><td>12.5 GB</td></tr>
+        <tr><td>ACL policy testing</td><td>All network devices + VPCS (no servers)</td><td>12.5 GB</td></tr>
+        <tr><td>Netmiko / Ansible</td><td>All network devices + VM-AUTO</td><td>14.5 GB</td></tr>
+        <tr><td>Zabbix monitoring</td><td>Core + dist + SW-A-DIS + VM-ZABBIX</td><td>11.0 GB</td></tr>
+      </table>
+      <div class="ok">
+        For the current step, start only <strong>R-EDGE, R-CORE, SW-CORE-1, SW-CORE-2</strong> (~2.6 GB).
+        IOSvL2 takes 2–4 minutes to boot — wait for the prompt before assuming a fault.
+      </div>
+    </div>
+  </div>
+
+  <h2>Build checklist</h2>
+  <div class="two-col">
+    <div>
+      <h3>Placement</h3>
+      <ul class="tight">
+        <li><span class="chk">☐</span> Project created as <code>EE8203-campus-network</code></li>
+        <li><span class="chk">☐</span> 2 × IOSv placed and renamed</li>
+        <li><span class="chk">☐</span> 9 × IOSvL2 placed and renamed</li>
+        <li><span class="chk">☐</span> 8 × VPCS placed and renamed</li>
+        <li><span class="chk">☐</span> NAT cloud placed, renamed <code>Internet</code></li>
+        <li><span class="chk">☐</span> Nodes arranged in tiers (WAN → core → dist → access → hosts)</li>
+        <li><span class="chk">☐</span> All names checked for typos</li>
+      </ul>
+      <h3>Cabling</h3>
+      <ul class="tight">
+        <li><span class="chk">☐</span> Batch A — routing spine, 4 links</li>
+        <li><span class="chk">☐</span> Batch B — core peer link, 2 links</li>
+        <li><span class="chk">☐</span> Batch C — dual-homed uplinks, 8 links</li>
+        <li><span class="chk">☐</span> Batch D — access and hosts, 11 links</li>
+        <li><span class="chk">☐</span> Total 25 links, each verified against the port map</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Verify before configuring</h3>
+      <ul class="tight">
+        <li><span class="chk">☐</span> Start R-EDGE, R-CORE, SW-CORE-1, SW-CORE-2</li>
+        <li><span class="chk">☐</span> Each reaches a CLI prompt</li>
+        <li><span class="chk">☐</span> <code>show ip interface brief</code> lists Gi0/0–Gi0/3 on routers</li>
+        <li><span class="chk">☐</span> <code>show ip interface brief</code> lists Gi0/0–Gi3/3 on switches</li>
+        <li><span class="chk">☐</span> Project saved</li>
+        <li><span class="chk">☐</span> GNS3 snapshot taken, named <code>00-cabled-baseline</code></li>
+      </ul>
+
+      <h3>Then, and only then</h3>
+      <div class="ok">
+        Move on to device configuration: hostnames, VLAN database, trunk links with native VLAN 100,
+        the core SVIs, HSRP, and management access on VLAN 99. Configure and verify the core pair
+        before starting any distribution or access switch — a fault in the core is far easier to find
+        with four devices running than with eleven.
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
