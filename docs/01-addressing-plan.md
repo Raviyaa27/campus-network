@@ -14,7 +14,7 @@ allocated so that the purpose of any address is obvious from its prefix:
 | `10.99.99.0/24` | Out-of-band management VLAN (VLAN 99) |
 | `10.255.255.0/24` | Point-to-point routed links between L3 devices |
 | `10.99.0.0/24` | Router management loopbacks |
-| `203.0.113.0/24` | Simulated internet (outside NAT) |
+| `192.168.25.0/24` | Simulated internet (outside NAT), provided by the GNS3 NAT node |
 
 ## 2. VLAN allocation
 
@@ -64,7 +64,7 @@ address space and keep OSPF adjacencies explicit.
 
 | Link | Subnet | Device A | IP A | Device B | IP B |
 |------|--------|----------|------|----------|------|
-| R-EDGE ↔ Internet | 203.0.113.0/24 | R-EDGE Gi0/0 | 203.0.113.2/24 | Cloud (gw) | 203.0.113.1 |
+| R-EDGE ↔ Internet | 192.168.25.0/24 | R-EDGE Gi0/0 | 192.168.25.10/24 | NAT node (gw) | 192.168.25.2 |
 | R-EDGE ↔ R-CORE | 10.255.255.0/30 | R-EDGE Gi0/1 | 10.255.255.1 | R-CORE Gi0/1 | 10.255.255.2 |
 | R-CORE ↔ SW-CORE-1 | 10.255.255.4/30 | R-CORE Gi0/2 | 10.255.255.5 | SW-CORE-1 Gi0/0 | 10.255.255.6 |
 | R-CORE ↔ SW-CORE-2 | 10.255.255.8/30 | R-CORE Gi0/3 | 10.255.255.9 | SW-CORE-2 Gi0/0 | 10.255.255.10 |
@@ -125,8 +125,14 @@ Test hosts use static addresses so that ACL test results are reproducible.
   subnets, the management VLAN, the point-to-point links and both router
   loopbacks are advertised into area 0.
 - **Static default route** on R-EDGE toward the simulated internet:
-  `ip route 0.0.0.0 0.0.0.0 203.0.113.1`, redistributed into OSPF as a default
-  originate so the interior devices learn it.
+  `ip route 0.0.0.0 0.0.0.0 192.168.25.2`, advertised into OSPF with
+  `default-information originate` so the interior devices learn it.
+
+  The outside address was originally planned as `203.0.113.2/24`, a documentation
+  range. The GNS3 NAT node actually serves `192.168.25.0/24` with the gateway at
+  `.2`, so the plan was corrected to match the simulator. `192.168.25.10` is used
+  statically because it sits below the DHCP pool, which keeps the address stable
+  across restarts and makes NAT translations reproducible for testing.
 - **NAT overload (PAT)** on R-EDGE, outside interface Gi0/0. Only VLAN_DEIE
   (10.10.10.0/24) and VLAN_DCEE (10.10.20.0/24) are matched by the NAT ACL, so
   only those two departments obtain internet egress. VLAN_DMME, VLAN_DIS and
