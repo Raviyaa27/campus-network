@@ -1,0 +1,72 @@
+# Device inventory for the campus network automation scripts.
+#
+# Scripts read every connection parameter from this file. Nothing about a
+# device is written into the scripts themselves, so adding or renumbering a
+# device is an inventory change and never a code change.
+#
+# Credentials are deliberately absent. They are supplied at run time from the
+# NET_PASSWORD environment variable, or prompted for if that is unset, so no
+# password is ever committed to the repository.
+
+defaults:
+  device_type: cisco_ios
+  username: admin
+  port: 22
+  # Seconds. IOSv under emulation is slow to respond, so these are generous.
+  conn_timeout: 30
+  global_delay_factor: 2
+
+devices:
+  - name: R-CORE
+    host: 10.99.0.1
+    role: router
+
+  - name: R-EDGE
+    host: 10.99.0.2
+    role: router
+
+  - name: SW-CORE-1
+    host: 10.99.99.2
+    role: core_switch
+
+  - name: SW-CORE-2
+    host: 10.99.99.3
+    role: core_switch
+
+  - name: SW-D-DEIE
+    host: 10.99.99.11
+    role: distribution_switch
+
+  - name: SW-D-DCEE
+    host: 10.99.99.12
+    role: distribution_switch
+
+  - name: SW-D-DMME
+    host: 10.99.99.13
+    role: distribution_switch
+
+  - name: SW-A-DEIE
+    host: 10.99.99.21
+    role: access_switch
+
+  - name: SW-A-DCEE
+    host: 10.99.99.22
+    role: access_switch
+
+  - name: SW-A-DMME
+    host: 10.99.99.23
+    role: access_switch
+
+  - name: SW-A-DIS
+    host: 10.99.99.24
+    role: access_switch
+
+# Values used by the SNMP deployment script. Held here rather than in the
+# script so the community string or trap destination can be changed without
+# touching code.
+snmp:
+  community: CampusRO
+  access: RO
+  trap_host: 10.10.40.20
+  location: Faculty of Engineering, University of Ruhuna, Hapugala
+  contact: EE8203 Network Operations

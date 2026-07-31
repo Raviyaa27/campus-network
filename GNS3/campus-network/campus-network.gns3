@@ -632,42 +632,6 @@
             },
             {
                 "filters": {},
-                "link_id": "f8958897-f6cc-46ac-b608-5669b3bc03f2",
-                "link_style": {
-                    "color": "#000000",
-                    "type": 1,
-                    "width": 2
-                },
-                "nodes": [
-                    {
-                        "adapter_number": 9,
-                        "label": {
-                            "rotation": 0,
-                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
-                            "text": "Gi2/1",
-                            "x": 52,
-                            "y": 52
-                        },
-                        "node_id": "0cfd2e2d-f41b-481e-94aa-44c3d4c6f677",
-                        "port_number": 0
-                    },
-                    {
-                        "adapter_number": 1,
-                        "label": {
-                            "rotation": 0,
-                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
-                            "text": "e1",
-                            "x": -1,
-                            "y": -6
-                        },
-                        "node_id": "e2a4aeac-d226-47ff-a3d4-68658dab79bf",
-                        "port_number": 0
-                    }
-                ],
-                "suspend": false
-            },
-            {
-                "filters": {},
                 "link_id": "3d11db5c-1f8a-4ca2-b062-907500419360",
                 "link_style": {
                     "color": "#000000",
@@ -949,6 +913,42 @@
                             "y": -8
                         },
                         "node_id": "29abeed6-72da-4d14-b58e-f6b36c9e8971",
+                        "port_number": 0
+                    }
+                ],
+                "suspend": false
+            },
+            {
+                "filters": {},
+                "link_id": "ee5a31fe-f55d-4fe9-ad1a-f21ade890cab",
+                "link_style": {
+                    "color": "#000000",
+                    "type": 1,
+                    "width": 2
+                },
+                "nodes": [
+                    {
+                        "adapter_number": 9,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "Gi2/1",
+                            "x": 54,
+                            "y": 50
+                        },
+                        "node_id": "0cfd2e2d-f41b-481e-94aa-44c3d4c6f677",
+                        "port_number": 0
+                    },
+                    {
+                        "adapter_number": 0,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "e0",
+                            "x": -4,
+                            "y": -4
+                        },
+                        "node_id": "e2a4aeac-d226-47ff-a3d4-68658dab79bf",
                         "port_number": 0
                     }
                 ],
@@ -1787,7 +1787,7 @@
                 "port_segment_size": 0,
                 "properties": {
                     "adapter_type": "e1000",
-                    "adapters": 2,
+                    "adapters": 1,
                     "headless": false,
                     "linked_clone": false,
                     "on_close": "power_off",
@@ -2032,6 +2032,44 @@
                 "width": 65,
                 "x": 480,
                 "y": 358,
+                "z": 1
+            },
+            {
+                "compute_id": "local",
+                "console": null,
+                "console_auto_start": false,
+                "console_type": "none",
+                "custom_adapters": [],
+                "first_port_name": "",
+                "height": 59,
+                "label": {
+                    "rotation": 0,
+                    "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                    "text": "VM-DHCP-1",
+                    "x": -8,
+                    "y": -25
+                },
+                "locked": false,
+                "name": "VM-DHCP-1",
+                "node_id": "74798eb7-db48-44d3-bc6d-73afe5928e92",
+                "node_type": "vmware",
+                "port_name_format": "Ethernet{0}",
+                "port_segment_size": 0,
+                "properties": {
+                    "adapter_type": "e1000",
+                    "adapters": 1,
+                    "headless": false,
+                    "linked_clone": false,
+                    "on_close": "power_off",
+                    "usage": "",
+                    "use_any_adapter": false,
+                    "vmx_path": "D:\\Projects\\Network Project\\VM-DHCP\\Ubuntu 64-bit.vmx"
+                },
+                "symbol": ":/symbols/vmware_guest.svg",
+                "template_id": "b0852505-8e17-4b0c-a4dd-3d422a7d2581",
+                "width": 65,
+                "x": 713,
+                "y": 279,
                 "z": 1
             }
         ]
