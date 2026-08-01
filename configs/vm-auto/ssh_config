@@ -1,0 +1,24 @@
+# SSH client configuration for VM-AUTO.
+#
+# Copy to ~/.ssh/config on the automation host:
+#     cp ~/campus-network/configs/vm-auto/ssh_config ~/.ssh/config
+#     chmod 600 ~/.ssh/config
+#
+# Cisco IOS 15.x offers only SHA-1 key exchange and RSA host keys. OpenSSH 8.8
+# and later disable both by default, so a connection to any device in the
+# management VLAN fails with "no matching key exchange method found".
+#
+# The exceptions below are scoped to 10.99.* only. Connections to anything else,
+# including the internet, continue to use the current default algorithms, so the
+# client is not weakened globally in order to reach legacy equipment.
+
+Host 10.99.*
+    KexAlgorithms +diffie-hellman-group14-sha1
+    HostKeyAlgorithms +ssh-rsa
+    PubkeyAcceptedAlgorithms +ssh-rsa
+    # The lab is rebuilt frequently and host keys change with it. Suppressing
+    # the known-hosts check avoids repeated verification failures after a
+    # device is wiped and reconfigured during reset-and-replay testing.
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    LogLevel ERROR
