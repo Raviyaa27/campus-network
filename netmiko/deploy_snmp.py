@@ -12,13 +12,20 @@ match the intended state. Re-running it against a correctly configured estate
 makes no changes and reports every device as unchanged.
 
 Usage:
-    python3 deploy_snmp.py
+    python3 deploy_snmp.py                      # every device in the inventory
+    python3 deploy_snmp.py --role core_switch   # only devices with that role
+    python3 deploy_snmp.py --device SW-CORE-1   # named devices only
 
     NET_PASSWORD may be set in the environment to avoid the password prompt.
+
+The filters exist because the emulated estate cannot always run every device at
+once. Deploying to a subset and repeating for the rest reaches the same end
+state, which is a property of the script being idempotent.
 """
 
 from __future__ import annotations
 
+import argparse
 import logging
 import sys
 from pathlib import Path
@@ -51,9 +58,16 @@ def build_snmp_commands(snmp: dict) -> list[str]:
     ]
 
 
-def current_snmp_config(connection) -> list[str]:
-    """Return the SNMP lines currently present in the running configuration."""
-    output = connection.send_command("show running-config | include ^snmp-server")
+def current_snmp_config(connection, read_timeout: int) -> list[str]:
+    """Return the SNMP lines currently present in the running configuration.
+
+    read_timeout is passed explicitly rather than left at the Netmiko default,
+    which assumes a device that answers in milliseconds.
+    """
+    output = connection.send_command(
+        "show running-config | include ^snmp-server",
+        read_timeout=read_timeout,
+    )
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
@@ -68,18 +82,27 @@ def needs_change(current: list[str], intended: list[str]) -> list[str]:
     return [line for line in intended if line not in current]
 
 
-def configure_device(device: dict, password: str, intended: list[str]) -> str:
+def configure_device(
+    device: dict, password: str, intended: list[str], timeouts: dict
+) -> str:
     """Apply the SNMP configuration to one device.
 
     Returns one of CHANGED, UNCHANGED or FAILED for the run summary.
     """
     name = device["name"]
-    connection = connect(device, password)
+    read_timeout = timeouts["read_timeout"]
+
+    connection = connect(
+        device,
+        password,
+        attempts=timeouts["connect_attempts"],
+        retry_delay=timeouts["retry_delay"],
+    )
     if connection is None:
         return "FAILED"
 
     try:
-        current = current_snmp_config(connection)
+        current = current_snmp_config(connection, read_timeout)
         missing = needs_change(current, intended)
 
         if not missing:
@@ -90,8 +113,14 @@ def configure_device(device: dict, password: str, intended: list[str]) -> str:
         for line in missing:
             logging.info("[%s]   + %s", name, line)
 
-        connection.send_config_set(missing)
-        connection.save_config()
+        # cmd_verify is disabled because it makes Netmiko wait for each command
+        # to be echoed back before sending the next. On an emulated device that
+        # echo can take seconds, and the wait provides no benefit here since the
+        # result is verified by re-reading the configuration on the next run.
+        connection.send_config_set(
+            missing, read_timeout=read_timeout, cmd_verify=False
+        )
+        connection.save_config(read_timeout=read_timeout)
         logging.info("[%s] configuration saved", name)
         return "CHANGED"
 
@@ -106,12 +135,47 @@ def configure_device(device: dict, password: str, intended: list[str]) -> str:
         logging.info("[%s] disconnected", name)
 
 
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Deploy SNMPv2c configuration to the campus network."
+    )
+    parser.add_argument(
+        "--role",
+        action="append",
+        help="Only devices with this role. May be given more than once.",
+    )
+    parser.add_argument(
+        "--device",
+        action="append",
+        help="Only this device by name. May be given more than once.",
+    )
+    return parser.parse_args()
+
+
+def select_devices(devices: list[dict], args: argparse.Namespace) -> list[dict]:
+    """Apply the command line filters to the inventory."""
+    selected = devices
+
+    if args.role:
+        selected = [d for d in selected if d.get("role") in args.role]
+    if args.device:
+        selected = [d for d in selected if d["name"] in args.device]
+
+    return selected
+
+
 def main() -> int:
+    args = parse_arguments()
     setup_logging("deploy-snmp")
 
     inventory = load_inventory()
-    devices = inventory["devices"]
+    devices = select_devices(inventory["devices"], args)
     intended = build_snmp_commands(inventory["snmp"])
+    timeouts = inventory["timeouts"]
+
+    if not devices:
+        logging.error("No devices matched the given filters")
+        return 1
 
     logging.info("Deploying SNMPv2c to %d device(s)", len(devices))
     logging.info("Trap destination: %s", inventory["snmp"]["trap_host"])
@@ -120,7 +184,9 @@ def main() -> int:
 
     results = {}
     for device in devices:
-        results[device["name"]] = configure_device(device, password, intended)
+        results[device["name"]] = configure_device(
+            device, password, intended, timeouts
+        )
 
     return summarise(results)
 

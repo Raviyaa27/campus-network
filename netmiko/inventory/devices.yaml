@@ -8,13 +8,23 @@
 # NET_PASSWORD environment variable, or prompted for if that is unset, so no
 # password is ever committed to the repository.
 
+# Timeouts are deliberately generous. These devices are emulated, sharing a
+# small number of virtual CPUs, and their control plane responds in the order of
+# a second rather than a millisecond. Netmiko's defaults assume real hardware
+# and abandon a command long before an emulated IOSv has answered.
+#
+# fast_cli is disabled for the same reason: it shortens the delays between
+# writing a command and reading the reply, which is the wrong trade here.
 defaults:
   device_type: cisco_ios
   username: admin
   port: 22
-  # Seconds. IOSv under emulation is slow to respond, so these are generous.
-  conn_timeout: 30
-  global_delay_factor: 2
+  conn_timeout: 60
+  auth_timeout: 90
+  banner_timeout: 90
+  session_timeout: 180
+  fast_cli: false
+  global_delay_factor: 4
 
 devices:
   - name: R-CORE
@@ -60,6 +70,14 @@ devices:
   - name: SW-A-DIS
     host: 10.99.99.24
     role: access_switch
+
+# How long to wait for a single command to return, and how many times to retry
+# a device that fails. Retries matter on an emulated estate where a device may
+# simply have been too busy to answer the first time.
+timeouts:
+  read_timeout: 180
+  connect_attempts: 3
+  retry_delay: 10
 
 # Values used by the SNMP deployment script. Held here rather than in the
 # script so the community string or trap destination can be changed without

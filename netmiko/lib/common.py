@@ -14,6 +14,7 @@ import getpass
 import logging
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -87,17 +88,27 @@ def setup_logging(script_name: str) -> Path:
         ],
     )
 
+    # Paramiko logs the SSH negotiation and the full IOSv licence banner at
+    # INFO level for every device, which buries our own output. Warnings and
+    # errors from it are still wanted.
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+
     logging.info("Log file: %s", log_file)
     return log_file
 
 
-def connect(device: dict, password: str):
-    """Open an SSH session to one device.
+def connect(device: dict, password: str, attempts: int = 3, retry_delay: int = 10):
+    """Open an SSH session to one device, retrying on failure.
 
-    Returns a connected Netmiko object, or None if the device could not be
-    reached or refused the credentials. Returning None rather than raising lets
-    the caller carry on with the remaining devices: one unreachable switch
-    should not abandon a run across eleven.
+    Returns a connected Netmiko object, or None if every attempt failed.
+    Returning None rather than raising lets the caller carry on with the
+    remaining devices: one unreachable switch should not abandon a run across
+    eleven.
+
+    Retries are worthwhile here because these devices are emulated and share a
+    small number of virtual CPUs. A device that is simply too busy to complete
+    the login sequence on one attempt will often succeed moments later, and
+    that is a different situation from a device that is genuinely down.
     """
     name = device["name"]
 
@@ -111,20 +122,34 @@ def connect(device: dict, password: str):
     params["password"] = password
     params["secret"] = password
 
-    try:
-        logging.info("[%s] connecting to %s", name, device["host"])
-        connection = ConnectHandler(**params)
-        connection.enable()
-        logging.info("[%s] connected", name)
-        return connection
+    for attempt in range(1, attempts + 1):
+        try:
+            logging.info(
+                "[%s] connecting to %s (attempt %d/%d)",
+                name, device["host"], attempt, attempts,
+            )
+            connection = ConnectHandler(**params)
+            connection.enable()
+            logging.info("[%s] connected", name)
+            return connection
 
-    except NetmikoTimeoutException:
-        logging.error("[%s] unreachable at %s - timed out", name, device["host"])
-    except NetmikoAuthenticationException:
-        logging.error("[%s] authentication failed - check credentials", name)
-    except Exception as error:  # noqa: BLE001 - report anything unexpected
-        logging.error("[%s] unexpected error: %s", name, error)
+        except NetmikoAuthenticationException:
+            # Wrong credentials will never succeed on a retry, so stop here
+            # rather than locking the account out with repeated attempts.
+            logging.error("[%s] authentication failed - check credentials", name)
+            return None
 
+        except NetmikoTimeoutException:
+            logging.warning("[%s] timed out on attempt %d", name, attempt)
+
+        except Exception as error:  # noqa: BLE001 - report anything unexpected
+            logging.warning("[%s] attempt %d failed: %s", name, attempt, error)
+
+        if attempt < attempts:
+            logging.info("[%s] retrying in %ds", name, retry_delay)
+            time.sleep(retry_delay)
+
+    logging.error("[%s] unreachable after %d attempts", name, attempts)
     return None
 
 
