@@ -1,0 +1,17 @@
+2026-08-01 09:45:36  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/deploy-snmp-20260801-094536.log
+2026-08-01 09:45:36  INFO     Deploying SNMPv2c to 2 device(s)
+2026-08-01 09:45:36  INFO     Trap destination: 10.10.40.20
+2026-08-01 09:45:55  INFO     [R-CORE] connecting to 10.99.0.1 (attempt 1/3)
+2026-08-01 09:45:58  INFO     [R-CORE] connected
+2026-08-01 09:46:03  INFO     [R-CORE] SNMP already correct, no change made
+2026-08-01 09:46:03  INFO     [R-CORE] disconnected
+2026-08-01 09:46:03  INFO     [R-EDGE] connecting to 10.99.0.2 (attempt 1/3)
+2026-08-01 09:46:06  INFO     [R-EDGE] connected
+2026-08-01 09:46:11  INFO     [R-EDGE] SNMP already correct, no change made
+2026-08-01 09:46:12  INFO     [R-EDGE] disconnected
+2026-08-01 09:46:12  INFO     ------------------------------------------------------------
+2026-08-01 09:46:12  INFO     Summary
+2026-08-01 09:46:12  INFO       R-CORE         UNCHANGED
+2026-08-01 09:46:12  INFO       R-EDGE         UNCHANGED
+2026-08-01 09:46:12  INFO     ------------------------------------------------------------
+2026-08-01 09:46:12  INFO     0 device(s) changed, 2 unchanged, 0 failed

@@ -1,0 +1,22 @@
+2026-08-01 09:38:29  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/deploy-snmp-20260801-093829.log
+2026-08-01 09:38:29  INFO     Deploying SNMPv2c to 3 device(s)
+2026-08-01 09:38:29  INFO     Trap destination: 10.10.40.20
+2026-08-01 09:38:38  INFO     [SW-D-DEIE] connecting to 10.99.99.11 (attempt 1/3)
+2026-08-01 09:38:41  INFO     [SW-D-DEIE] connected
+2026-08-01 09:38:48  INFO     [SW-D-DEIE] SNMP already correct, no change made
+2026-08-01 09:38:48  INFO     [SW-D-DEIE] disconnected
+2026-08-01 09:38:48  INFO     [SW-D-DCEE] connecting to 10.99.99.12 (attempt 1/3)
+2026-08-01 09:38:51  INFO     [SW-D-DCEE] connected
+2026-08-01 09:38:58  INFO     [SW-D-DCEE] SNMP already correct, no change made
+2026-08-01 09:38:58  INFO     [SW-D-DCEE] disconnected
+2026-08-01 09:38:58  INFO     [SW-D-DMME] connecting to 10.99.99.13 (attempt 1/3)
+2026-08-01 09:39:02  INFO     [SW-D-DMME] connected
+2026-08-01 09:39:09  INFO     [SW-D-DMME] SNMP already correct, no change made
+2026-08-01 09:39:09  INFO     [SW-D-DMME] disconnected
+2026-08-01 09:39:09  INFO     ------------------------------------------------------------
+2026-08-01 09:39:09  INFO     Summary
+2026-08-01 09:39:09  INFO       SW-D-DCEE      UNCHANGED
+2026-08-01 09:39:09  INFO       SW-D-DEIE      UNCHANGED
+2026-08-01 09:39:09  INFO       SW-D-DMME      UNCHANGED
+2026-08-01 09:39:09  INFO     ------------------------------------------------------------
+2026-08-01 09:39:09  INFO     0 device(s) changed, 3 unchanged, 0 failed

@@ -1,0 +1,5 @@
+2026-08-01 06:51:50  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/deploy-snmp-20260801-065150.log
+2026-08-01 06:51:50  INFO     Deploying SNMPv2c to 1 device(s)
+2026-08-01 06:51:50  INFO     Trap destination: 10.10.40.20
+2026-08-01 06:51:50  INFO     [SW-A-DIS] connecting to 10.99.99.24 (attempt 1/3)
+2026-08-01 06:51:54  INFO     [SW-A-DIS] connected

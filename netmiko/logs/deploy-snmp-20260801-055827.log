@@ -1,0 +1,147 @@
+2026-08-01 05:58:27  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/deploy-snmp-20260801-055827.log
+2026-08-01 05:58:27  INFO     Deploying SNMPv2c to 11 device(s)
+2026-08-01 05:58:27  INFO     Trap destination: 10.10.40.20
+2026-08-01 05:58:27  INFO     [R-CORE] connecting to 10.99.0.1
+2026-08-01 05:58:27  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 05:58:33  INFO     Auth banner: b"\r\n**************************************************************************\r\n* IOSv is strictly limited to use for evaluation, demonstration and IOS  *\r\n* education. IOSv is provided as-is and is not supported by Cisco's      *\r\n* Technical Advisory Center. Any use or disclosure, in whole or in part, *\r\n* of the IOSv Software or Documentation to any third party for any       *\r\n* purposes is expressly prohibited except as otherwise authorized by     *\r\n* Cisco in writing.                                                      *\r\n**************************************************************************"
+2026-08-01 05:58:33  INFO     Authentication (password) successful!
+2026-08-01 05:58:53  ERROR    [R-CORE] unexpected error: 
+
+Pattern not detected: 'terminal width 511' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 05:58:53  INFO     [R-EDGE] connecting to 10.99.0.2
+2026-08-01 05:58:56  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 05:59:01  INFO     Auth banner: b"\r\n**************************************************************************\r\n* IOSv is strictly limited to use for evaluation, demonstration and IOS  *\r\n* education. IOSv is provided as-is and is not supported by Cisco's      *\r\n* Technical Advisory Center. Any use or disclosure, in whole or in part, *\r\n* of the IOSv Software or Documentation to any third party for any       *\r\n* purposes is expressly prohibited except as otherwise authorized by     *\r\n* Cisco in writing.                                                      *\r\n**************************************************************************"
+2026-08-01 05:59:28  ERROR    [R-EDGE] authentication failed - check credentials
+2026-08-01 05:59:28  INFO     [SW-CORE-1] connecting to 10.99.99.2
+2026-08-01 05:59:33  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 05:59:39  INFO     Auth banner: b'\r\nIOSv - Cisco Systems Confidential -\r\n\r\nSupplemental End User License Restrictions\r\n\r\nThis IOSv software is provided AS-IS without warranty of any kind. Under no circumstances may this software be used separate from the Cisco Modeling Labs Software that this software was provided with, or deployed or used as part of a production environment.\r\n\r\nBy using the software, you agree to abide by the terms and conditions of the Cisco End User License Agreement at http://www.cisco.com/go/eula. Unauthorized use or distribution of this software is expressly prohibited.\r\n'
+2026-08-01 05:59:40  INFO     Authentication (password) successful!
+2026-08-01 06:00:23  ERROR    [SW-CORE-1] unexpected error: 
+
+Pattern not detected: '(?:\\#|>)' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 06:00:23  INFO     [SW-CORE-2] connecting to 10.99.99.3
+2026-08-01 06:00:26  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:01:00  ERROR    [SW-CORE-2] authentication failed - check credentials
+2026-08-01 06:01:00  INFO     [SW-D-DEIE] connecting to 10.99.99.11
+2026-08-01 06:01:01  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:01:41  ERROR    [SW-D-DEIE] authentication failed - check credentials
+2026-08-01 06:01:41  INFO     [SW-D-DCEE] connecting to 10.99.99.12
+2026-08-01 06:01:44  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:01:54  INFO     Auth banner: b'\r\nIOSv - Cisco Systems Confidential -\r\n\r\nSupplemental End User License Restrictions\r\n\r\nThis IOSv software is provided AS-IS without warranty of any kind. Under no circumstances may this software be used separate from the Cisco Modeling Labs Software that this software was provided with, or deployed or used as part of a production environment.\r\n\r\nBy using the software, you agree to abide by the terms and conditions of the Cisco End User License Agreement at http://www.cisco.com/go/eula. Unauthorized use or distribution of this software is expressly prohibited.\r\n'
+2026-08-01 06:01:54  INFO     Authentication (password) successful!
+2026-08-01 06:04:04  ERROR    [SW-D-DCEE] unexpected error: 
+
+Pattern not detected: 'terminal width 511' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 06:04:04  INFO     [SW-D-DMME] connecting to 10.99.99.13
+2026-08-01 06:04:04  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:04:19  INFO     Auth banner: b'\r\nIOSv - Cisco Systems Confidential -\r\n\r\nSupplemental End User License Restrictions\r\n\r\nThis IOSv software is provided AS-IS without warranty of any kind. Under no circumstances may this software be used separate from the Cisco Modeling Labs Software that this software was provided with, or deployed or used as part of a production environment.\r\n\r\nBy using the software, you agree to abide by the terms and conditions of the Cisco End User License Agreement at http://www.cisco.com/go/eula. Unauthorized use or distribution of this software is expressly prohibited.\r\n'
+2026-08-01 06:04:19  INFO     Authentication (password) successful!
+2026-08-01 06:04:32  INFO     [SW-D-DMME] connected
+2026-08-01 06:04:51  ERROR    [SW-D-DMME] failed while configuring: 
+
+Pattern not detected: 'show\\ running\\-config\\ \\|\\ include\\ \\^snmp\\-server' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 06:05:01  INFO     [SW-D-DMME] disconnected
+2026-08-01 06:05:01  INFO     [SW-A-DEIE] connecting to 10.99.99.21
+2026-08-01 06:05:17  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:05:32  INFO     Auth banner: b'\r\nIOSv - Cisco Systems Confidential -\r\n\r\nSupplemental End User License Restrictions\r\n\r\nThis IOSv software is provided AS-IS without warranty of any kind. Under no circumstances may this software be used separate from the Cisco Modeling Labs Software that this software was provided with, or deployed or used as part of a production environment.\r\n\r\nBy using the software, you agree to abide by the terms and conditions of the Cisco End User License Agreement at http://www.cisco.com/go/eula. Unauthorized use or distribution of this software is expressly prohibited.\r\n'
+2026-08-01 06:05:36  INFO     Authentication (password) successful!
+2026-08-01 06:05:57  ERROR    [SW-A-DEIE] unexpected error: 
+
+Pattern not detected: 'terminal width 511' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 06:05:57  INFO     [SW-A-DCEE] connecting to 10.99.99.22
+2026-08-01 06:05:57  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:06:27  ERROR    [SW-A-DCEE] unreachable at 10.99.99.22 - timed out
+2026-08-01 06:06:27  INFO     [SW-A-DMME] connecting to 10.99.99.23
+2026-08-01 06:06:28  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:06:32  INFO     Auth banner: b'\r\nIOSv - Cisco Systems Confidential -\r\n\r\nSupplemental End User License Restrictions\r\n\r\nThis IOSv software is provided AS-IS without warranty of any kind. Under no circumstances may this software be used separate from the Cisco Modeling Labs Software that this software was provided with, or deployed or used as part of a production environment.\r\n\r\nBy using the software, you agree to abide by the terms and conditions of the Cisco End User License Agreement at http://www.cisco.com/go/eula. Unauthorized use or distribution of this software is expressly prohibited.\r\n'
+2026-08-01 06:06:32  INFO     Authentication (password) successful!
+2026-08-01 06:06:43  INFO     [SW-A-DMME] connected
+2026-08-01 06:06:57  ERROR    [SW-A-DMME] failed while configuring: 
+
+Pattern not detected: 'show\\ running\\-config\\ \\|\\ include\\ \\^snmp\\-server' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 06:07:07  INFO     [SW-A-DMME] disconnected
+2026-08-01 06:07:07  INFO     [SW-A-DIS] connecting to 10.99.99.24
+2026-08-01 06:07:07  INFO     Connected (version 2.0, client Cisco-1.25)
+2026-08-01 06:07:08  INFO     Auth banner: b'\r\nIOSv - Cisco Systems Confidential -\r\n\r\nSupplemental End User License Restrictions\r\n\r\nThis IOSv software is provided AS-IS without warranty of any kind. Under no circumstances may this software be used separate from the Cisco Modeling Labs Software that this software was provided with, or deployed or used as part of a production environment.\r\n\r\nBy using the software, you agree to abide by the terms and conditions of the Cisco End User License Agreement at http://www.cisco.com/go/eula. Unauthorized use or distribution of this software is expressly prohibited.\r\n'
+2026-08-01 06:07:08  INFO     Authentication (password) successful!
+2026-08-01 06:07:12  INFO     [SW-A-DIS] connected
+2026-08-01 06:07:22  ERROR    [SW-A-DIS] failed while configuring: 
+Pattern not detected: 'SW\\-A\\-DIS\\#' in output.
+
+Things you might try to fix this:
+1. Explicitly set your pattern using the expect_string argument.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 06:07:26  INFO     [SW-A-DIS] disconnected
+2026-08-01 06:07:26  INFO     ------------------------------------------------------------
+2026-08-01 06:07:26  INFO     Summary
+2026-08-01 06:07:26  INFO       R-CORE         FAILED
+2026-08-01 06:07:26  INFO       R-EDGE         FAILED
+2026-08-01 06:07:26  INFO       SW-A-DCEE      FAILED
+2026-08-01 06:07:26  INFO       SW-A-DEIE      FAILED
+2026-08-01 06:07:26  INFO       SW-A-DIS       FAILED
+2026-08-01 06:07:26  INFO       SW-A-DMME      FAILED
+2026-08-01 06:07:26  INFO       SW-CORE-1      FAILED
+2026-08-01 06:07:26  INFO       SW-CORE-2      FAILED
+2026-08-01 06:07:26  INFO       SW-D-DCEE      FAILED
+2026-08-01 06:07:26  INFO       SW-D-DEIE      FAILED
+2026-08-01 06:07:26  INFO       SW-D-DMME      FAILED
+2026-08-01 06:07:26  INFO     ------------------------------------------------------------
+2026-08-01 06:07:26  INFO     0 device(s) changed, 0 unchanged, 11 failed

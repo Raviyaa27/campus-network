@@ -1,0 +1,29 @@
+2026-08-01 06:26:23  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/deploy-snmp-20260801-062623.log
+2026-08-01 06:26:23  INFO     Deploying SNMPv2c to 1 device(s)
+2026-08-01 06:26:23  INFO     Trap destination: 10.10.40.20
+2026-08-01 06:26:23  INFO     [SW-A-DIS] connecting to 10.99.99.24 (attempt 1/3)
+2026-08-01 06:26:29  INFO     [SW-A-DIS] connected
+2026-08-01 06:26:51  INFO     [SW-A-DIS] applying 5 SNMP line(s)
+2026-08-01 06:26:51  INFO     [SW-A-DIS]   + snmp-server community CampusRO RO
+2026-08-01 06:26:51  INFO     [SW-A-DIS]   + snmp-server host 10.10.40.20 version 2c CampusRO
+2026-08-01 06:26:51  INFO     [SW-A-DIS]   + snmp-server location Faculty of Engineering, University of Ruhuna, Hapugala
+2026-08-01 06:26:51  INFO     [SW-A-DIS]   + snmp-server contact EE8203 Network Operations
+2026-08-01 06:26:51  INFO     [SW-A-DIS]   + snmp-server enable traps snmp linkdown linkup coldstart warmstart
+2026-08-01 06:27:14  ERROR    [SW-A-DIS] failed while configuring: 
+
+Pattern not detected: 'end' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-01 06:27:15  INFO     [SW-A-DIS] disconnected
+2026-08-01 06:27:15  INFO     ------------------------------------------------------------
+2026-08-01 06:27:15  INFO     Summary
+2026-08-01 06:27:15  INFO       SW-A-DIS       FAILED
+2026-08-01 06:27:15  INFO     ------------------------------------------------------------
+2026-08-01 06:27:15  INFO     0 device(s) changed, 0 unchanged, 1 failed
