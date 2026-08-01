@@ -32,6 +32,15 @@ INVENTORY_FILE = NETMIKO_DIR / "inventory" / "devices.yaml"
 LOG_DIR = NETMIKO_DIR / "logs"
 
 
+def load_yaml(path: Path) -> dict:
+    """Read a YAML file, failing with a clear message if it is missing."""
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    with open(path, encoding="utf-8") as handle:
+        return yaml.safe_load(handle)
+
+
 def load_inventory(path: Path = INVENTORY_FILE) -> dict:
     """Read the YAML inventory and merge the defaults into each device.
 
@@ -39,11 +48,7 @@ def load_inventory(path: Path = INVENTORY_FILE) -> dict:
     returned with the shared 'defaults' already applied, so callers receive
     complete connection parameters and never need to know about defaults.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"Inventory file not found: {path}")
-
-    with open(path, encoding="utf-8") as handle:
-        inventory = yaml.safe_load(handle)
+    inventory = load_yaml(path)
 
     defaults = inventory.get("defaults", {})
     merged = []

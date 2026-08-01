@@ -1,0 +1,123 @@
+# Intended configuration for the two routers.
+#
+# The configuration is expressed as data rather than as code so that changing
+# an address or an OSPF network is an edit to this file and never a change to
+# the script.
+#
+# Each section carries the command that reads its current state from the device
+# and the lines that section should contain. The script compares the two and
+# pushes a section only when something is missing, which is what makes repeated
+# runs safe.
+#
+# A section is pushed in full when it is incomplete, because context commands
+# such as "interface GigabitEthernet0/1" or "router ospf 1" must be issued
+# before the lines that belong to them.
+
+routers:
+
+  - name: R-CORE
+    sections:
+
+      - name: Loopback0
+        check: show running-config interface Loopback0
+        lines:
+          - interface Loopback0
+          - description Management loopback
+          - ip address 10.99.0.1 255.255.255.255
+
+      - name: Gi0/1 - link to R-EDGE
+        check: show running-config interface GigabitEthernet0/1
+        lines:
+          - interface GigabitEthernet0/1
+          - description Link to R-EDGE
+          - ip address 10.255.255.2 255.255.255.252
+          - ip ospf network point-to-point
+          - no shutdown
+
+      - name: Gi0/2 - link to SW-CORE-1
+        check: show running-config interface GigabitEthernet0/2
+        lines:
+          - interface GigabitEthernet0/2
+          - description Link to SW-CORE-1
+          - ip address 10.255.255.5 255.255.255.252
+          - ip ospf network point-to-point
+          - no shutdown
+
+      - name: Gi0/3 - link to SW-CORE-2
+        check: show running-config interface GigabitEthernet0/3
+        lines:
+          - interface GigabitEthernet0/3
+          - description Link to SW-CORE-2
+          - ip address 10.255.255.9 255.255.255.252
+          - ip ospf network point-to-point
+          - no shutdown
+
+      - name: OSPF area 0
+        check: show running-config | section ^router ospf
+        lines:
+          - router ospf 1
+          - router-id 10.99.0.1
+          - passive-interface Loopback0
+          - network 10.99.0.1 0.0.0.0 area 0
+          - network 10.255.255.0 0.0.0.3 area 0
+          - network 10.255.255.4 0.0.0.3 area 0
+          - network 10.255.255.8 0.0.0.3 area 0
+
+  - name: R-EDGE
+    sections:
+
+      - name: Loopback0
+        check: show running-config interface Loopback0
+        lines:
+          - interface Loopback0
+          - description Management loopback
+          - ip address 10.99.0.2 255.255.255.255
+
+      - name: Gi0/0 - outside interface
+        check: show running-config interface GigabitEthernet0/0
+        lines:
+          - interface GigabitEthernet0/0
+          - description Outside interface to simulated internet
+          - ip address 192.168.25.10 255.255.255.0
+          - ip nat outside
+          - no shutdown
+
+      - name: Gi0/1 - link to R-CORE
+        check: show running-config interface GigabitEthernet0/1
+        lines:
+          - interface GigabitEthernet0/1
+          - description Link to R-CORE
+          - ip address 10.255.255.1 255.255.255.252
+          - ip ospf network point-to-point
+          - ip nat inside
+          - no shutdown
+
+      # Only DEIE and DCEE appear here, so only those two departments obtain
+      # internet egress. The remaining subnets reach R-EDGE and are discarded
+      # for want of a translation entry.
+      - name: NAT permitted subnets
+        check: show running-config | section ^ip access-list standard NAT_PERMITTED
+        lines:
+          - ip access-list standard NAT_PERMITTED
+          - permit 10.10.10.0 0.0.0.255
+          - permit 10.10.20.0 0.0.0.255
+
+      - name: NAT overload
+        check: show running-config | include ^ip nat inside source
+        lines:
+          - ip nat inside source list NAT_PERMITTED interface GigabitEthernet0/0 overload
+
+      - name: Default route
+        check: show running-config | include ^ip route 0.0.0.0
+        lines:
+          - ip route 0.0.0.0 0.0.0.0 192.168.25.2
+
+      - name: OSPF area 0
+        check: show running-config | section ^router ospf
+        lines:
+          - router ospf 1
+          - router-id 10.99.0.2
+          - passive-interface Loopback0
+          - network 10.99.0.2 0.0.0.0 area 0
+          - network 10.255.255.0 0.0.0.3 area 0
+          - default-information originate
