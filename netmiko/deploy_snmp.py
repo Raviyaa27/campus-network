@@ -117,10 +117,25 @@ def configure_device(
         # to be echoed back before sending the next. On an emulated device that
         # echo can take seconds, and the wait provides no benefit here since the
         # result is verified by re-reading the configuration on the next run.
+        #
+        # exit_config_mode is also disabled, and the exit is issued separately
+        # below. Netmiko's own exit_config_mode() does not accept the read
+        # timeout passed to this call and falls back to a much shorter internal
+        # default, which these devices regularly exceed. A timeout at that point
+        # would abandon a change that had in fact already been applied.
         connection.send_config_set(
-            missing, read_timeout=read_timeout, cmd_verify=False
+            missing,
+            read_timeout=read_timeout,
+            cmd_verify=False,
+            exit_config_mode=False,
         )
-        connection.save_config(read_timeout=read_timeout)
+
+        # Leaving configuration mode and writing to startup are issued as plain
+        # commands so that the read timeout applies to them as well.
+        connection.send_command("end", expect_string=r"#", read_timeout=read_timeout)
+        connection.send_command(
+            "write memory", expect_string=r"#", read_timeout=read_timeout
+        )
         logging.info("[%s] configuration saved", name)
         return "CHANGED"
 
