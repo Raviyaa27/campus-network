@@ -1,0 +1,13 @@
+2026-08-07 06:07:08  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/configure-routers-20260807-060708.log
+2026-08-07 06:07:08  INFO     DRY RUN - no configuration will be applied
+2026-08-07 06:07:08  INFO     Configuring 2 router(s)
+2026-08-07 06:07:19  INFO     [R-CORE] connecting to 10.99.0.1 (attempt 1/3)
+2026-08-07 06:07:28  ERROR    [R-CORE] authentication failed - check credentials
+2026-08-07 06:07:28  INFO     [R-EDGE] connecting to 10.99.0.2 (attempt 1/3)
+2026-08-07 06:08:26  ERROR    [R-EDGE] authentication failed - check credentials
+2026-08-07 06:08:26  INFO     ------------------------------------------------------------
+2026-08-07 06:08:26  INFO     Summary
+2026-08-07 06:08:26  INFO       R-CORE         FAILED
+2026-08-07 06:08:26  INFO       R-EDGE         FAILED
+2026-08-07 06:08:26  INFO     ------------------------------------------------------------
+2026-08-07 06:08:26  INFO     0 device(s) changed, 0 unchanged, 2 failed

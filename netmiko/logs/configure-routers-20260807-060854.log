@@ -1,0 +1,32 @@
+2026-08-07 06:08:54  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/configure-routers-20260807-060854.log
+2026-08-07 06:08:54  INFO     DRY RUN - no configuration will be applied
+2026-08-07 06:08:54  INFO     Configuring 2 router(s)
+2026-08-07 06:09:02  INFO     [R-CORE] connecting to 10.99.0.1 (attempt 1/3)
+2026-08-07 06:09:27  INFO     [R-CORE] connected
+2026-08-07 06:09:35  INFO     [R-CORE] Loopback0                    already correct
+2026-08-07 06:09:48  INFO     [R-CORE] Gi0/1 - link to R-EDGE       already correct
+2026-08-07 06:10:00  INFO     [R-CORE] Gi0/2 - link to SW-CORE-1    already correct
+2026-08-07 06:10:12  ERROR    [R-CORE] failed while configuring: 
+
+Pattern not detected: 'show\\ running\\-config\\ interface\\ GigabitEthernet0/3' in output.
+
+Things you might try to fix this:
+1. Adjust the regex pattern to better identify the terminating string. Note, in
+many situations the pattern is automatically based on the network device's prompt.
+2. Increase the read_timeout to a larger value.
+
+You can also look at the Netmiko session_log or debug log for more information.
+
+
+2026-08-07 06:10:22  INFO     [R-CORE] disconnected
+2026-08-07 06:10:22  INFO     [R-EDGE] connecting to 10.99.0.2 (attempt 1/3)
+2026-08-07 06:10:52  WARNING  [R-EDGE] attempt 1 failed: 
+2026-08-07 06:10:52  INFO     [R-EDGE] retrying in 10s
+2026-08-07 06:11:02  INFO     [R-EDGE] connecting to 10.99.0.2 (attempt 2/3)
+2026-08-07 06:12:43  ERROR    [R-EDGE] authentication failed - check credentials
+2026-08-07 06:12:43  INFO     ------------------------------------------------------------
+2026-08-07 06:12:43  INFO     Summary
+2026-08-07 06:12:43  INFO       R-CORE         FAILED
+2026-08-07 06:12:43  INFO       R-EDGE         FAILED
+2026-08-07 06:12:43  INFO     ------------------------------------------------------------
+2026-08-07 06:12:43  INFO     0 device(s) changed, 0 unchanged, 2 failed

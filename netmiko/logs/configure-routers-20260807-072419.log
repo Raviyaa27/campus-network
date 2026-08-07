@@ -1,0 +1,29 @@
+2026-08-07 07:24:19  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/configure-routers-20260807-072419.log
+2026-08-07 07:24:19  INFO     Configuring 1 router(s)
+2026-08-07 07:24:24  INFO     [R-CORE] connecting to 10.99.0.1 (attempt 1/3)
+2026-08-07 07:24:27  INFO     [R-CORE] connected
+2026-08-07 07:24:30  INFO     [R-CORE] Loopback0                    1 line(s) missing
+2026-08-07 07:24:30  INFO     [R-CORE]     + description Management loopback
+2026-08-07 07:24:40  INFO     [R-CORE] Gi0/1 - link to R-EDGE       4 line(s) missing
+2026-08-07 07:24:40  INFO     [R-CORE]     + description Link to R-EDGE
+2026-08-07 07:24:40  INFO     [R-CORE]     + ip address 10.255.255.2 255.255.255.252
+2026-08-07 07:24:40  INFO     [R-CORE]     + ip ospf network point-to-point
+2026-08-07 07:24:40  INFO     [R-CORE]     + no shutdown
+2026-08-07 07:24:53  INFO     [R-CORE] Gi0/2 - link to SW-CORE-1    1 line(s) missing
+2026-08-07 07:24:53  INFO     [R-CORE]     + description Link to SW-CORE-1
+2026-08-07 07:25:06  INFO     [R-CORE] Gi0/3 - link to SW-CORE-2    4 line(s) missing
+2026-08-07 07:25:06  INFO     [R-CORE]     + description Link to SW-CORE-2
+2026-08-07 07:25:06  INFO     [R-CORE]     + ip address 10.255.255.9 255.255.255.252
+2026-08-07 07:25:06  INFO     [R-CORE]     + ip ospf network point-to-point
+2026-08-07 07:25:06  INFO     [R-CORE]     + no shutdown
+2026-08-07 07:25:20  INFO     [R-CORE] OSPF area 0                  3 line(s) missing
+2026-08-07 07:25:20  INFO     [R-CORE]     + passive-interface Loopback0
+2026-08-07 07:25:20  INFO     [R-CORE]     + network 10.255.255.0 0.0.0.3 area 0
+2026-08-07 07:25:20  INFO     [R-CORE]     + network 10.255.255.8 0.0.0.3 area 0
+2026-08-07 07:25:30  INFO     [R-CORE] configuration saved
+2026-08-07 07:25:30  INFO     [R-CORE] disconnected
+2026-08-07 07:25:30  INFO     ------------------------------------------------------------
+2026-08-07 07:25:30  INFO     Summary
+2026-08-07 07:25:30  INFO       R-CORE         CHANGED
+2026-08-07 07:25:30  INFO     ------------------------------------------------------------
+2026-08-07 07:25:30  INFO     1 device(s) changed, 0 unchanged, 0 failed

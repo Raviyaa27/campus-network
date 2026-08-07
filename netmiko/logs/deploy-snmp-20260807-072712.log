@@ -1,0 +1,18 @@
+2026-08-07 07:27:12  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/deploy-snmp-20260807-072712.log
+2026-08-07 07:27:12  INFO     Deploying SNMPv2c to 1 device(s)
+2026-08-07 07:27:12  INFO     Trap destination: 10.10.40.20
+2026-08-07 07:27:17  INFO     [R-CORE] connecting to 10.99.0.1 (attempt 1/3)
+2026-08-07 07:27:20  INFO     [R-CORE] connected
+2026-08-07 07:27:26  INFO     [R-CORE] applying 5 SNMP line(s)
+2026-08-07 07:27:26  INFO     [R-CORE]   + snmp-server community CampusRO RO
+2026-08-07 07:27:26  INFO     [R-CORE]   + snmp-server host 10.10.40.20 version 2c CampusRO
+2026-08-07 07:27:26  INFO     [R-CORE]   + snmp-server location Faculty of Engineering, University of Ruhuna, Hapugala
+2026-08-07 07:27:26  INFO     [R-CORE]   + snmp-server contact EE8203 Network Operations
+2026-08-07 07:27:26  INFO     [R-CORE]   + snmp-server enable traps snmp linkdown linkup coldstart warmstart
+2026-08-07 07:27:37  INFO     [R-CORE] configuration saved
+2026-08-07 07:27:38  INFO     [R-CORE] disconnected
+2026-08-07 07:27:38  INFO     ------------------------------------------------------------
+2026-08-07 07:27:38  INFO     Summary
+2026-08-07 07:27:38  INFO       R-CORE         CHANGED
+2026-08-07 07:27:38  INFO     ------------------------------------------------------------
+2026-08-07 07:27:38  INFO     1 device(s) changed, 0 unchanged, 0 failed

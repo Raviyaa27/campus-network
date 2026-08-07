@@ -1,0 +1,29 @@
+2026-08-07 06:48:30  INFO     Log file: /home/ravindu/campus-network/netmiko/logs/configure-routers-20260807-064830.log
+2026-08-07 06:48:30  INFO     DRY RUN - no configuration will be applied
+2026-08-07 06:48:30  INFO     Configuring 2 router(s)
+2026-08-07 06:48:36  INFO     [R-CORE] connecting to 10.99.0.1 (attempt 1/3)
+2026-08-07 06:48:39  INFO     [R-CORE] connected
+2026-08-07 06:48:45  INFO     [R-CORE] Loopback0                    already correct
+2026-08-07 06:48:52  INFO     [R-CORE] Gi0/1 - link to R-EDGE       already correct
+2026-08-07 06:48:58  INFO     [R-CORE] Gi0/2 - link to SW-CORE-1    already correct
+2026-08-07 06:49:05  INFO     [R-CORE] Gi0/3 - link to SW-CORE-2    already correct
+2026-08-07 06:49:11  INFO     [R-CORE] OSPF area 0                  already correct
+2026-08-07 06:49:11  INFO     [R-CORE] already in intended state
+2026-08-07 06:49:11  INFO     [R-CORE] disconnected
+2026-08-07 06:49:11  INFO     [R-EDGE] connecting to 10.99.0.2 (attempt 1/3)
+2026-08-07 06:49:14  INFO     [R-EDGE] connected
+2026-08-07 06:49:20  INFO     [R-EDGE] Loopback0                    already correct
+2026-08-07 06:49:27  INFO     [R-EDGE] Gi0/0 - outside interface    already correct
+2026-08-07 06:49:34  INFO     [R-EDGE] Gi0/1 - link to R-CORE       already correct
+2026-08-07 06:49:40  INFO     [R-EDGE] NAT permitted subnets        already correct
+2026-08-07 06:49:47  INFO     [R-EDGE] NAT overload                 already correct
+2026-08-07 06:49:53  INFO     [R-EDGE] Default route                already correct
+2026-08-07 06:50:00  INFO     [R-EDGE] OSPF area 0                  already correct
+2026-08-07 06:50:00  INFO     [R-EDGE] already in intended state
+2026-08-07 06:50:00  INFO     [R-EDGE] disconnected
+2026-08-07 06:50:00  INFO     ------------------------------------------------------------
+2026-08-07 06:50:00  INFO     Summary
+2026-08-07 06:50:00  INFO       R-CORE         UNCHANGED
+2026-08-07 06:50:00  INFO       R-EDGE         UNCHANGED
+2026-08-07 06:50:00  INFO     ------------------------------------------------------------
+2026-08-07 06:50:00  INFO     0 device(s) changed, 2 unchanged, 0 failed
