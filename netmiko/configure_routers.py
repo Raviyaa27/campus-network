@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -58,10 +59,41 @@ def line_is_present(line: str, current: list[str]) -> bool:
     return line in current
 
 
-def read_section(connection, command: str, read_timeout: int) -> list[str]:
-    """Return the device's current configuration for one section."""
-    output = run_command(connection, command, read_timeout)
-    return [line.strip() for line in output.splitlines() if line.strip()]
+def read_section(
+    connection, command: str, read_timeout: int, attempts: int = 3
+) -> list[str]:
+    """Return the device's current configuration for one section.
+
+    An empty result is retried rather than accepted at face value. A read that
+    returns nothing because the device was too busy to answer is indistinguishable
+    from a section that genuinely does not exist, and treating the first as the
+    second is dangerous: the script would conclude that correctly configured
+    interfaces were missing and push them again, which destroys the idempotency
+    the whole design depends on.
+
+    Retrying costs a few seconds in the rare case where a section really is
+    absent, and prevents a false negative in the common case where the device
+    was simply slow.
+    """
+    for attempt in range(1, attempts + 1):
+        output = run_command(connection, command, read_timeout)
+        lines = [line.strip() for line in output.splitlines() if line.strip()]
+
+        if lines:
+            return lines
+
+        if attempt < attempts:
+            logging.warning(
+                "empty response to '%s', re-reading (%d/%d)",
+                command, attempt, attempts,
+            )
+            time.sleep(3)
+
+    # Every attempt came back empty, so the section is accepted as genuinely
+    # absent. This is the correct reading for a router that has no OSPF process
+    # or no NAT configuration yet.
+    logging.info("no configuration present for '%s'", command)
+    return []
 
 
 def section_is_complete(section: dict, current: list[str]) -> bool:
