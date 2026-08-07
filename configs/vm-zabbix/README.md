@@ -5,13 +5,26 @@ SNMPv2c.
 
 ## Network position
 
-A single interface in VLAN 40, connected to SW-A-DIS port Gi2/0.
+Two interfaces, with different purposes.
 
-| Setting | Value |
-|---------|-------|
-| Address | 10.10.40.20/24 |
-| Gateway | 10.10.40.1 (HSRP virtual address on the core pair) |
-| VLAN | 40 (DIS server farm) |
+| Interface | Attachment | Address | Purpose |
+|-----------|-----------|---------|---------|
+| ens33 | SW-A-DIS Gi2/0, VLAN 40 | 10.10.40.20/24, gateway 10.10.40.1 | SNMP polling of the campus |
+| ens37 | VMware NAT | DHCP | Web interface, reachable from the build host |
+
+The second interface exists because the web interface would otherwise be
+unreachable. The build host has no route into the simulated campus, and
+`ACL_DIS_IN` denies `10.10.40.0/24` to `10.99.99.0/24`, so HTTP replies to a
+browser on the management VLAN would be discarded by the campus policy itself.
+
+Separating the monitoring path from the console path is also what production
+deployments do: the server polls devices over the network it monitors, and
+operators reach its interface out of band, so a fault in the monitored network
+does not also remove the ability to see it.
+
+The NAT interface is configured not to install a default route, so all campus
+traffic continues to leave through 10.10.40.1 and the second interface carries
+only sessions initiated towards it.
 
 The monitoring server sits in the server farm rather than the management VLAN
 because it is a server. `ACL_DIS_IN` on the core pair already permits UDP 161
@@ -135,6 +148,7 @@ network:
   version: 2
   renderer: networkd
   ethernets:
+    # Campus interface, managed by GNS3 and cabled to SW-A-DIS Gi2/0.
     ens33:
       dhcp4: false
       addresses: [10.10.40.20/24]
@@ -143,6 +157,16 @@ network:
           via: 10.10.40.1
       nameservers:
         addresses: [8.8.8.8, 1.1.1.1]
+
+    # Out of band interface on VMware NAT, used only to reach the web
+    # interface from the build host. use-routes is disabled so the DHCP
+    # supplied default route does not compete with the campus one; without
+    # it, SNMP polling could leave through the wrong interface.
+    ens37:
+      dhcp4: true
+      dhcp4-overrides:
+        use-routes: false
+        use-dns: false
 ```
 
 Prevent cloud-init from overwriting it, as on VM-AUTO:
