@@ -1,0 +1,22 @@
+department_vlan: 20
+
+switch_vlans:
+  - vlan_id: 20
+    name: VLAN_DCEE
+  - vlan_id: 99
+    name: MGMT
+  - vlan_id: 100
+    name: NATIVE
+
+trunk_ports:
+  - name: GigabitEthernet0/0
+    description: Uplink to SW-D-DCEE
+    allowed_vlans: "20,99"
+
+access_ports:
+  - name: GigabitEthernet1/0
+    description: DCEE user port
+    vlan: 20
+  - name: GigabitEthernet1/1
+    description: DCEE user port
+    vlan: 20

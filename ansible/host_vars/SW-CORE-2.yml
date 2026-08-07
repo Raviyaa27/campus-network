@@ -1,0 +1,5 @@
+# STP root placement is aligned with the HSRP active role for the same
+# VLANs. If the two disagreed, traffic would reach one core at Layer 2
+# and have to cross the peer link to find its gateway on the other.
+stp_root_primary: "30,40"
+stp_root_secondary: "10,20,99"

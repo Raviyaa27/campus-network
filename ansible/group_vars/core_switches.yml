@@ -1,0 +1,40 @@
+# Variables common to SW-CORE-1 and SW-CORE-2.
+#
+# The core pair holds every VLAN because it performs all inter-VLAN routing and
+# because the peer link must carry all of them. Everything below the core is
+# pruned to the VLANs that branch actually needs.
+
+switch_vlans:
+  - vlan_id: 10
+    name: VLAN_DEIE
+  - vlan_id: 20
+    name: VLAN_DCEE
+  - vlan_id: 30
+    name: VLAN_DMME
+  - vlan_id: 40
+    name: VLAN_DIS
+  - vlan_id: 99
+    name: MGMT
+  - vlan_id: 100
+    name: NATIVE
+
+# Downlinks are identical on both cores because each distribution switch and
+# SW-A-DIS is dual homed to the pair.
+trunk_ports:
+  - name: Port-channel1
+    description: Peer link to the other core switch
+    allowed_vlans: "10,20,30,40,99"
+  - name: GigabitEthernet0/3
+    description: Downlink to SW-D-DEIE
+    allowed_vlans: "10,99"
+  - name: GigabitEthernet1/0
+    description: Downlink to SW-D-DCEE
+    allowed_vlans: "20,99"
+  - name: GigabitEthernet1/1
+    description: Downlink to SW-D-DMME
+    allowed_vlans: "30,99"
+  - name: GigabitEthernet1/2
+    description: Downlink to SW-A-DIS
+    allowed_vlans: "40,99"
+
+access_ports: []

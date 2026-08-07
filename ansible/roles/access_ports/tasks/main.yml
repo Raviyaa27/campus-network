@@ -1,0 +1,21 @@
+---
+# Ports facing end hosts. Assigned to a single VLAN and configured to begin
+# forwarding immediately, since no switch will ever be attached to them.
+
+- name: Configure access interfaces
+  cisco.ios.ios_config:
+    parents: "interface {{ item.name }}"
+    lines:
+      - "description {{ item.description }}"
+      - "switchport mode access"
+      - "switchport access vlan {{ item.vlan }}"
+      # portfast skips listening and learning so a host does not wait ~30
+      # seconds to forward, which otherwise causes DHCP to time out at boot.
+      - "spanning-tree portfast"
+      # portfast assumes no switch is attached; BPDU guard enforces that
+      # assumption by disabling the port if a BPDU ever arrives.
+      - "spanning-tree bpduguard enable"
+  loop: "{{ access_ports }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: access_ports | length > 0

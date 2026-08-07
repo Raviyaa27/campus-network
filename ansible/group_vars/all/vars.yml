@@ -1,0 +1,29 @@
+# Connection settings applied to every switch.
+#
+# The passwords reference variables defined in vault.yml, which is encrypted.
+# This split is the conventional Ansible pattern: the plain file names what is
+# needed and can be read by anyone, while the values themselves are only
+# readable with the vault password.
+
+ansible_connection: ansible.netcommon.network_cli
+ansible_network_os: cisco.ios.ios
+
+# Paramiko rather than libssh. IOS 15.x offers only SHA-1 key exchange and RSA
+# host keys, which Paramiko still permits and newer libssh builds may refuse.
+ansible_network_cli_ssh_type: paramiko
+
+ansible_user: admin
+ansible_password: "{{ vault_device_password }}"
+
+# Configuration commands require privileged EXEC, which Ansible reaches by
+# issuing enable rather than by logging in with a privileged shell.
+ansible_become: true
+ansible_become_method: enable
+ansible_become_password: "{{ vault_device_password }}"
+
+ansible_command_timeout: 120
+ansible_connect_timeout: 120
+
+# The native VLAN carries no user traffic. Defined once here because every
+# trunk in the campus uses the same value.
+native_vlan: 100

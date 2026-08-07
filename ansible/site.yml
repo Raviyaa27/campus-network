@@ -1,0 +1,30 @@
+---
+# Top level playbook. Applies the full intended switch configuration.
+#
+# The role order is a genuine dependency chain rather than a preference:
+#
+#   1. vlans        - a VLAN must exist in the database before anything can
+#                     reference it
+#   2. trunking     - trunks carry VLANs between switches, so the VLANs they
+#                     allow must already exist
+#   3. access_ports - a port can only be assigned to a VLAN that exists
+#   4. stp          - root placement is per VLAN, so the VLANs must be present
+#                     for the priorities to apply to anything
+#
+# Running the roles in any other order produces errors or silently incomplete
+# configuration on a switch being built from nothing.
+#
+# Usage:
+#   ansible-playbook site.yml --check      report differences, change nothing
+#   ansible-playbook site.yml              apply the intended state
+#   ansible-playbook site.yml --limit core_switches
+
+- name: Configure campus switches
+  hosts: switches
+  gather_facts: false
+
+  roles:
+    - vlans
+    - trunking
+    - access_ports
+    - stp

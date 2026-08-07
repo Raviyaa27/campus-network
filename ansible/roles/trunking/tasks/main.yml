@@ -1,0 +1,21 @@
+---
+# 802.1Q trunks between switches. Each trunk carries only the VLANs that
+# branch of the topology needs, and tags everything: the native VLAN is an
+# unused one, so no user traffic is ever carried untagged.
+
+- name: Configure trunk interfaces
+  cisco.ios.ios_config:
+    parents: "interface {{ item.name }}"
+    lines:
+      - "description {{ item.description }}"
+      - "switchport trunk encapsulation dot1q"
+      - "switchport mode trunk"
+      - "switchport trunk native vlan {{ native_vlan }}"
+      - "switchport trunk allowed vlan {{ item.allowed_vlans }}"
+    # ios_config compares each line against the running configuration and
+    # issues only those that differ, which is what makes a second run report
+    # no change.
+  loop: "{{ trunk_ports }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: trunk_ports | length > 0

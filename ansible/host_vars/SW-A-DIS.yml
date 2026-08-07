@@ -1,0 +1,40 @@
+# SW-A-DIS attaches directly to the core pair rather than through a
+# distribution switch, because the server farm has no distribution tier in
+# this design. It is therefore dual homed like a distribution switch while
+# presenting access ports like an access switch.
+department_vlan: 40
+
+switch_vlans:
+  - vlan_id: 40
+    name: VLAN_DIS
+  - vlan_id: 99
+    name: MGMT
+  - vlan_id: 100
+    name: NATIVE
+
+trunk_ports:
+  - name: GigabitEthernet0/0
+    description: Uplink to SW-CORE-1
+    allowed_vlans: "40,99"
+  - name: GigabitEthernet0/1
+    description: Uplink to SW-CORE-2
+    allowed_vlans: "40,99"
+
+access_ports:
+  - name: GigabitEthernet1/0
+    description: DIS test host
+    vlan: 40
+  - name: GigabitEthernet1/1
+    description: DIS test host
+    vlan: 40
+  - name: GigabitEthernet1/3
+    description: VM-DHCP server
+    vlan: 40
+  - name: GigabitEthernet2/0
+    description: VM-ZABBIX monitoring server
+    vlan: 40
+  # VM-AUTO sits in the management VLAN, not the server VLAN. That is what
+  # allows it to reach every device over SSH while the servers cannot.
+  - name: GigabitEthernet2/1
+    description: VM-AUTO automation host
+    vlan: 99

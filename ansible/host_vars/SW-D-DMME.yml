@@ -1,0 +1,25 @@
+# This switch carries only its own department VLAN and management. The
+# pruning confines the department's broadcast domain to its own branch
+# of the topology.
+department_vlan: 30
+
+switch_vlans:
+  - vlan_id: 30
+    name: VLAN_DMME
+  - vlan_id: 99
+    name: MGMT
+  - vlan_id: 100
+    name: NATIVE
+
+trunk_ports:
+  - name: GigabitEthernet0/0
+    description: Uplink to SW-CORE-1
+    allowed_vlans: "30,99"
+  - name: GigabitEthernet0/1
+    description: Uplink to SW-CORE-2
+    allowed_vlans: "30,99"
+  - name: GigabitEthernet0/2
+    description: Downlink to SW-A-DMME
+    allowed_vlans: "30,99"
+
+access_ports: []

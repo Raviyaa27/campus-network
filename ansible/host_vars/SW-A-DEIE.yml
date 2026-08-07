@@ -1,0 +1,22 @@
+department_vlan: 10
+
+switch_vlans:
+  - vlan_id: 10
+    name: VLAN_DEIE
+  - vlan_id: 99
+    name: MGMT
+  - vlan_id: 100
+    name: NATIVE
+
+trunk_ports:
+  - name: GigabitEthernet0/0
+    description: Uplink to SW-D-DEIE
+    allowed_vlans: "10,99"
+
+access_ports:
+  - name: GigabitEthernet1/0
+    description: DEIE user port
+    vlan: 10
+  - name: GigabitEthernet1/1
+    description: DEIE user port
+    vlan: 10
