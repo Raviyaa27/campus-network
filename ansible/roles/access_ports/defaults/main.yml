@@ -1,0 +1,6 @@
+---
+# How this IOS release stores the portfast command. Held as a variable because
+# releases before 15.2(4)E store it as "spanning-tree portfast" without the
+# edge keyword, and the string has to match the device exactly for the task to
+# be idempotent.
+portfast_command: spanning-tree portfast edge

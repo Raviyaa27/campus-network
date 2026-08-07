@@ -11,7 +11,13 @@
       - "switchport access vlan {{ item.vlan }}"
       # portfast skips listening and learning so a host does not wait ~30
       # seconds to forward, which otherwise causes DHCP to time out at boot.
-      - "spanning-tree portfast"
+      #
+      # The command is written the way IOS stores it, not the way it is
+      # commonly typed. From 15.2(4)E onwards "spanning-tree portfast" is
+      # accepted at the prompt but saved as "spanning-tree portfast edge".
+      # Declaring the shorter form would never match the running configuration
+      # and this task would report a change on every run.
+      - "{{ portfast_command }}"
       # portfast assumes no switch is attached; BPDU guard enforces that
       # assumption by disabling the port if a BPDU ever arrives.
       - "spanning-tree bpduguard enable"
