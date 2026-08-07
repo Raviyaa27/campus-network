@@ -1,8 +1,8 @@
 ---
 # Spanning tree mode and root placement.
 #
-# Rapid PVST converges in seconds rather than the ~50 seconds of the
-# original standard, which matters because the dual homed uplinks depend on
+# Rapid PVST converges in seconds rather than the ~50 seconds of the original
+# standard, which matters because the dual homed uplinks depend on
 # reconvergence when a link fails.
 
 - name: Set the spanning tree mode
@@ -10,16 +10,27 @@
     lines:
       - "spanning-tree mode {{ stp_mode }}"
 
-# Only the core pair takes a root role. Every other switch keeps the default
-# priority so the root can never move below the core.
+# The priority values are stated explicitly rather than using the
+# "root primary" and "root secondary" keywords.
+#
+# Those keywords are a macro: IOS evaluates them once, converts them to a
+# priority, and stores only the result. The running configuration holds
+# "spanning-tree vlan 10,20,99 priority 24576" and no trace of the word
+# "primary". Declaring the macro would therefore never match what is on the
+# device, and every run would report a change that had already been made.
+#
+# The macro is also relative to whatever the current root happens to be, so the
+# value it produces depends on the state of the network when it runs. A
+# declarative tool needs a value that does not move.
+
 - name: Set root priority for the VLANs this switch leads
   cisco.ios.ios_config:
     lines:
-      - "spanning-tree vlan {{ stp_root_primary }} root primary"
+      - "spanning-tree vlan {{ stp_root_primary }} priority {{ stp_priority_primary }}"
   when: stp_root_primary is defined
 
 - name: Set backup root priority for the peer's VLANs
   cisco.ios.ios_config:
     lines:
-      - "spanning-tree vlan {{ stp_root_secondary }} root secondary"
+      - "spanning-tree vlan {{ stp_root_secondary }} priority {{ stp_priority_secondary }}"
   when: stp_root_secondary is defined

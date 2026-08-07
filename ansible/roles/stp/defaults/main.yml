@@ -1,2 +1,7 @@
 ---
 stp_mode: rapid-pvst
+
+# The values IOS itself stores for "root primary" and "root secondary" on a
+# network using the default priority of 32768.
+stp_priority_primary: 24576
+stp_priority_secondary: 28672
