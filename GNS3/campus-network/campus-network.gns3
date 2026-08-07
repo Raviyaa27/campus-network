@@ -2071,6 +2071,44 @@
                 "x": 713,
                 "y": 279,
                 "z": 1
+            },
+            {
+                "compute_id": "local",
+                "console": null,
+                "console_auto_start": false,
+                "console_type": "none",
+                "custom_adapters": [],
+                "first_port_name": "",
+                "height": 59,
+                "label": {
+                    "rotation": 0,
+                    "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                    "text": "VM-ZABBIX-1",
+                    "x": -15,
+                    "y": -25
+                },
+                "locked": false,
+                "name": "VM-ZABBIX-1",
+                "node_id": "f186ed5b-01d6-48a3-bbaf-3effb492d1ee",
+                "node_type": "vmware",
+                "port_name_format": "Ethernet{0}",
+                "port_segment_size": 0,
+                "properties": {
+                    "adapter_type": "e1000",
+                    "adapters": 1,
+                    "headless": false,
+                    "linked_clone": false,
+                    "on_close": "power_off",
+                    "usage": "",
+                    "use_any_adapter": false,
+                    "vmx_path": "D:\\Projects\\Network Project\\VM-ZABBIX\\VM-ZABBIX.vmx"
+                },
+                "symbol": ":/symbols/vmware_guest.svg",
+                "template_id": "1ee0274b-08a3-43ef-a0b0-b8f46806f599",
+                "width": 65,
+                "x": 726,
+                "y": 153,
+                "z": 1
             }
         ]
     },
