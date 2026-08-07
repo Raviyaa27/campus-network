@@ -38,3 +38,10 @@ access_ports:
   - name: GigabitEthernet2/1
     description: VM-AUTO automation host
     vlan: 99
+
+# VM-AUTO reaches every device through this port. A rollback that reset it
+# would disconnect the automation host from the network it manages, leaving no
+# way to run the playbook that rebuilds the switch. It is excluded for that
+# reason and no other.
+rollback_protected_ports:
+  - GigabitEthernet2/1

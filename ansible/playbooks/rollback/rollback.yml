@@ -1,0 +1,81 @@
+---
+# Returns one switch to a clean baseline so that site.yml can rebuild it.
+#
+# What "clean baseline" means here needs stating precisely, because the obvious
+# reading is wrong. Wiping a switch completely would also remove the VLAN 99
+# SVI, the SSH configuration and the uplink trunk that carries management
+# traffic. The device would then be unreachable, and a rollback that requires
+# console access to recover from is not a rollback: it is an outage with extra
+# steps.
+#
+# This playbook therefore removes the configuration that automation owns - the
+# access ports, the department VLAN and the spanning tree root placement - and
+# deliberately leaves the management path intact:
+#
+#   * uplink and downlink trunks are untouched, because VLAN 99 rides them
+#   * VLAN 99 and the native VLAN are never removed
+#   * the SVI, credentials and SSH configuration are never removed
+#   * ports named in rollback_protected_ports are skipped
+#
+# The result is a switch that has lost its campus role but can still be reached
+# and rebuilt by site.yml.
+#
+# Usage:
+#   ansible-playbook playbooks/rollback/rollback.yml --limit SW-A-DEIE
+#   ansible-playbook site.yml --limit SW-A-DEIE          to rebuild afterwards
+
+- name: Roll back a campus switch to a clean baseline
+  hosts: switches
+  gather_facts: false
+  # One device at a time. If something is wrong with the rollback, it should
+  # affect a single switch rather than the entire estate simultaneously.
+  serial: 1
+
+  tasks:
+
+    # A rollback run against every switch at once would strip the whole campus
+    # of its access ports. Requiring --limit makes the target an explicit
+    # decision rather than the default.
+    - name: Require an explicit target
+      ansible.builtin.assert:
+        that:
+          - ansible_limit is defined
+        fail_msg: >-
+          This playbook must be run with --limit naming the device to roll back.
+          Running it against every switch at once is not supported.
+        success_msg: "Rolling back {{ inventory_hostname }}"
+
+    - name: Return access ports to their default state
+      cisco.ios.ios_config:
+        lines:
+          - "default interface {{ item.name }}"
+      loop: "{{ access_ports }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - access_ports | length > 0
+        - item.name not in (rollback_protected_ports | default([]))
+
+    - name: Remove the department VLAN from the database
+      cisco.ios.ios_vlans:
+        config:
+          - vlan_id: "{{ department_vlan }}"
+        state: deleted
+      when: department_vlan is defined
+
+    - name: Reset spanning tree root placement
+      cisco.ios.ios_config:
+        lines:
+          - "no spanning-tree vlan {{ stp_root_primary }} priority {{ stp_priority_primary | default(24576) }}"
+          - "no spanning-tree vlan {{ stp_root_secondary }} priority {{ stp_priority_secondary | default(28672) }}"
+      when: stp_root_primary is defined
+
+    - name: Write the rolled back configuration to startup
+      cisco.ios.ios_config:
+        save_when: modified
+
+    - name: Report what remains
+      ansible.builtin.debug:
+        msg: >-
+          {{ inventory_hostname }} rolled back. Management access on VLAN 99 is
+          retained. Rebuild with: ansible-playbook site.yml --limit {{ inventory_hostname }}

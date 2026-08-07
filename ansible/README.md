@@ -79,3 +79,30 @@ and for the core pair which VLANs it leads in spanning tree.
 The split matters for the trunk pruning in particular. Each downlink allows a
 different VLAN list, so that list cannot live in a group variable; it is a
 property of the individual switch.
+
+## Rollback
+
+Returns one switch to a clean baseline so `site.yml` can rebuild it:
+
+```
+ansible-playbook playbooks/rollback/rollback.yml --limit SW-A-DEIE
+ansible-playbook site.yml --limit SW-A-DEIE
+ansible-playbook site.yml --check --limit SW-A-DEIE
+```
+
+`--limit` is mandatory. The playbook asserts it was given, because a rollback
+run against the whole inventory would strip every access port in the campus.
+
+### What is deliberately not rolled back
+
+A complete wipe would remove the VLAN 99 SVI, the SSH configuration and the
+uplink trunk carrying management traffic. The switch would then be unreachable
+and could only be recovered by console, which defeats the purpose: a rollback
+that needs console access to recover from is an outage, not a rollback.
+
+The playbook therefore removes only what the automation owns — access ports,
+the department VLAN, and spanning tree root placement — and leaves the
+management path intact. `rollback_protected_ports` excludes specific
+interfaces; SW-A-DIS uses it to protect the port VM-AUTO is attached to, since
+resetting that would disconnect the automation host from the network it
+manages.
