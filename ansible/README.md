@@ -17,7 +17,7 @@ Create the vault holding the device password:
 
 ```
 cd ansible
-ansible-vault create group_vars/all/vault.yml
+ansible-vault create inventory/group_vars/all/vault.yml
 ```
 
 Enter a vault password when prompted, then put a single line in the file:
@@ -53,15 +53,20 @@ ansible-playbook site.yml --limit core_switches
 ansible-playbook site.yml --limit SW-A-DIS
 ```
 
+The variable directories sit beside the inventory file rather than beside
+`site.yml`. Ansible searches for them relative to both the playbook and the
+inventory, and only the inventory location is found by playbooks in
+subdirectories such as `playbooks/rollback/`.
+
 ## Layout
 
 | Path | Contents |
 |------|----------|
-| `inventory/hosts.yml` | Switches grouped by layer |
-| `group_vars/all/vars.yml` | Connection settings, references the vault |
-| `group_vars/all/vault.yml` | Encrypted device password |
-| `group_vars/<group>.yml` | Variables shared by a layer |
-| `host_vars/<switch>.yml` | VLANs, trunks and ports for one switch |
+|  `inventory/hosts.yml` | Switches grouped by layer |
+| `inventory/group_vars/all/vars.yml` | Connection settings, references the vault |
+| `inventory/group_vars/all/vault.yml` | Encrypted device password |
+| `inventory/group_vars/<group>.yml` | Variables shared by a layer |
+| `inventory/host_vars/<switch>.yml` | VLANs, trunks and ports for one switch |
 | `roles/vlans` | VLAN database |
 | `roles/trunking` | 802.1Q trunks, native VLAN, allowed lists |
 | `roles/access_ports` | Access VLAN, portfast, BPDU guard |
