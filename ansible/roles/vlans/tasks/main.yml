@@ -2,9 +2,18 @@
 # The VLAN database must exist before any trunk can allow a VLAN or any port
 # can be assigned to one, which is why this role runs first in site.yml.
 
-- name: Ensure the intended VLANs are present
+- name: Ensure the intended VLANs are present and forwarding
   cisco.ios.ios_vlans:
-    config: "{{ switch_vlans }}"
+    # shutdown is set explicitly on every VLAN rather than being left to the
+    # default. A VLAN can exist, carry the right name and hold the right ports
+    # while being locally shut down, in which case it forwards nothing and has
+    # no spanning tree instance. show vlan brief reports it as "act/lshut".
+    #
+    # This state is what the rollback playbook leaves behind, and a rebuild that
+    # only recreates the VLAN produces a switch whose configuration reads as
+    # correct and whose hosts cannot reach their gateway. Managing the attribute
+    # explicitly is what makes the rebuild complete rather than merely plausible.
+    config: "{{ switch_vlans | map('combine', {'shutdown': 'disabled'}) | list }}"
     # merged adds and corrects the VLANs listed without removing others.
     # overridden would delete anything not named here, which is the correct
     # behaviour for the rollback playbook but too destructive for site.yml:

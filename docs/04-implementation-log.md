@@ -77,7 +77,30 @@ The check now retries an empty read before concluding a section is absent. The
 underlying principle is that an idempotency check compares intent with observed
 state, so a failure to observe must never be reported as a difference.
 
-### 2.6 Netmiko defaults assume physical hardware
+### 2.6 A configuration can be correct and the network still broken
+
+After the rollback and rebuild of SW-A-DEIE, `ansible-playbook --check` reported
+zero changes, every interface showed `connected` in the right VLAN, and the
+running configuration of each port was exactly as intended. Hosts could not
+reach their gateway.
+
+`show vlan brief` reported VLAN 10 as `act/lshut`: the VLAN existed, held the
+right name and the right ports, and was locally shut down. A shut VLAN forwards
+nothing and has no spanning tree instance, which is why `show spanning-tree
+vlan 10` reported that the instance did not exist and the MAC address table was
+empty.
+
+The rollback left the VLAN in that state and the rebuild recreated it without
+clearing the shutdown, because the role did not manage that attribute at all.
+Ansible was reporting truthfully: every line it managed was correct. The set of
+lines it managed was incomplete.
+
+No amount of `--check` would have revealed this, because `--check` compares
+intent against reality and the intent itself was silent on the point. Only
+traffic exposed it. The lesson is recorded in the MOP test plan: a rollback is
+verified by a host reaching its gateway, not by a playbook exiting cleanly.
+
+### 2.7 Netmiko defaults assume physical hardware
 
 The first full run failed on every device with pattern and read timeouts rather
 than authentication errors. Two separate causes:
@@ -94,7 +117,7 @@ Netmiko's own `exit_config_mode()` and `save_config()` do not accept the read
 timeout passed to `send_config_set`, so those steps are issued as plain commands
 instead.
 
-### 2.7 Legacy device crypto against modern clients
+### 2.8 Legacy device crypto against modern clients
 
 IOS 15.x offers only SHA-1 key exchange and RSA host keys, both disabled by
 default in OpenSSH 8.8 and later. Direct `ssh` from Ubuntu 22.04 fails with "no
@@ -104,7 +127,7 @@ Resolved with a client configuration scoped to `10.99.*` only, so the exception
 applies to the legacy estate and not to every connection the host makes.
 Netmiko was unaffected because Paramiko still permits those algorithms.
 
-### 2.8 Emulated data planes are not suitable for bulk transfer
+### 2.9 Emulated data planes are not suitable for bulk transfer
 
 Installing packages on VM-AUTO through the campus network took over thirty
 minutes for `apt update` alone, because every packet crosses five
