@@ -36,6 +36,7 @@ from lib.common import (  # noqa: E402
     get_password,
     load_inventory,
     load_yaml,
+    run_command,
     setup_logging,
     summarise,
 )
@@ -59,7 +60,7 @@ def line_is_present(line: str, current: list[str]) -> bool:
 
 def read_section(connection, command: str, read_timeout: int) -> list[str]:
     """Return the device's current configuration for one section."""
-    output = connection.send_command(command, read_timeout=read_timeout)
+    output = run_command(connection, command, read_timeout)
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
@@ -82,7 +83,7 @@ def apply_section(connection, section: dict, read_timeout: int) -> None:
         cmd_verify=False,
         exit_config_mode=False,
     )
-    connection.send_command("end", expect_string=r"#", read_timeout=read_timeout)
+    run_command(connection, "end", read_timeout)
 
 
 def configure_router(
@@ -131,9 +132,7 @@ def configure_router(
             changed = True
 
         if changed and not dry_run:
-            connection.send_command(
-                "write memory", expect_string=r"#", read_timeout=read_timeout
-            )
+            run_command(connection, "write memory", read_timeout)
             logging.info("[%s] configuration saved", name)
             return "CHANGED"
 

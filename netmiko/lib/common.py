@@ -158,6 +158,28 @@ def connect(device: dict, password: str, attempts: int = 3, retry_delay: int = 1
     return None
 
 
+def run_command(connection, command: str, read_timeout: int) -> str:
+    """Send a command and return its output.
+
+    send_command_timing is used rather than send_command because it reads until
+    the device stops producing output, instead of waiting for the command to be
+    echoed back and the prompt to reappear in an expected form.
+
+    That distinction matters here. Netmiko's pattern matching is reliable
+    against hardware that echoes cleanly, but an emulated device under load
+    returns output in fragments, and a broken echo fails the match no matter how
+    long the timeout is. Reading until the device falls silent avoids the
+    problem entirely.
+    """
+    return connection.send_command_timing(
+        command,
+        read_timeout=read_timeout,
+        last_read=3.0,
+        strip_prompt=True,
+        strip_command=True,
+    )
+
+
 def summarise(results: dict) -> int:
     """Print a per-device summary and return a shell exit code.
 

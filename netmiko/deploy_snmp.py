@@ -38,6 +38,7 @@ from lib.common import (  # noqa: E402
     connect,
     get_password,
     load_inventory,
+    run_command,
     setup_logging,
     summarise,
 )
@@ -64,9 +65,8 @@ def current_snmp_config(connection, read_timeout: int) -> list[str]:
     read_timeout is passed explicitly rather than left at the Netmiko default,
     which assumes a device that answers in milliseconds.
     """
-    output = connection.send_command(
-        "show running-config | include ^snmp-server",
-        read_timeout=read_timeout,
+    output = run_command(
+        connection, "show running-config | include ^snmp-server", read_timeout
     )
     return [line.strip() for line in output.splitlines() if line.strip()]
 
@@ -132,10 +132,8 @@ def configure_device(
 
         # Leaving configuration mode and writing to startup are issued as plain
         # commands so that the read timeout applies to them as well.
-        connection.send_command("end", expect_string=r"#", read_timeout=read_timeout)
-        connection.send_command(
-            "write memory", expect_string=r"#", read_timeout=read_timeout
-        )
+        run_command(connection, "end", read_timeout)
+        run_command(connection, "write memory", read_timeout)
         logging.info("[%s] configuration saved", name)
         return "CHANGED"
 
