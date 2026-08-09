@@ -1,0 +1,1697 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>EE8203 Campus Network — Technical Documentation</title>
+<style>
+  @page { size: A4 portrait; margin: 18mm 16mm 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10pt;
+         color: #1a1a1a; margin: 0; line-height: 1.5; }
+
+  h1 { font-size: 20pt; color: #0b3d64; margin: 0 0 4px 0; }
+  h2 { font-size: 15pt; color: #0b3d64; margin: 26px 0 8px 0;
+       border-bottom: 2px solid #0b3d64; padding-bottom: 4px;
+       page-break-after: avoid; }
+  h3 { font-size: 12pt; color: #24618c; margin: 18px 0 6px 0; page-break-after: avoid; }
+  h4 { font-size: 10.5pt; color: #24618c; margin: 14px 0 4px 0; page-break-after: avoid; }
+  p  { margin: 0 0 8px 0; }
+
+  .sub { font-size: 10pt; color: #555; margin: 0 0 16px 0; }
+  .lead { font-size: 10.5pt; color: #333; }
+
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 14px 0; font-size: 8.8pt;
+          page-break-inside: avoid; }
+  th { background: #0b3d64; color: #fff; text-align: left; padding: 5px 7px; font-weight: 600; }
+  td { border: 1px solid #c8d4dd; padding: 4px 7px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f5f8fb; }
+  td.mono, th.mono { font-family: Consolas, monospace; font-size: 8.2pt; }
+
+  pre { background: #f4f6f8; border-left: 3px solid #7a93a8; padding: 8px 10px;
+        font-family: Consolas, monospace; font-size: 8.2pt; line-height: 1.4;
+        overflow-x: auto; margin: 8px 0 12px 0; page-break-inside: avoid;
+        white-space: pre-wrap; }
+  code { font-family: Consolas, monospace; background: #eef2f5; padding: 1px 4px;
+         border-radius: 2px; font-size: 8.8pt; }
+  pre code { background: none; padding: 0; font-size: 8.2pt; }
+
+  .note { background: #fff8e6; border-left: 3px solid #d9a300; padding: 8px 11px;
+          margin: 10px 0; font-size: 9.2pt; page-break-inside: avoid; }
+  .why  { background: #eef4fa; border-left: 3px solid #24618c; padding: 8px 11px;
+          margin: 10px 0; font-size: 9.2pt; page-break-inside: avoid; }
+  .lesson { background: #eef7f0; border-left: 3px solid #2e7d47; padding: 8px 11px;
+            margin: 10px 0; font-size: 9.2pt; page-break-inside: avoid; }
+  .warn { background: #fdf0ef; border-left: 3px solid #c0392b; padding: 8px 11px;
+          margin: 10px 0; font-size: 9.2pt; page-break-inside: avoid; }
+  .why b, .lesson b, .note b, .warn b { display: block; margin-bottom: 3px; }
+
+  ul, ol { margin: 4px 0 10px 20px; padding: 0; }
+  li { margin-bottom: 4px; }
+
+  .toc { font-size: 9.5pt; }
+  .toc ol { margin-left: 18px; }
+  .toc > ol > li { margin-bottom: 3px; font-weight: 600; }
+  .toc ol ol > li { font-weight: 400; }
+
+  .weight { display: inline-block; background: #0b3d64; color: #fff; font-size: 8pt;
+            padding: 1px 7px; border-radius: 9px; margin-left: 8px; vertical-align: middle;
+            font-weight: 600; }
+  .pagebreak { page-break-before: always; }
+  .fn { font-family: Consolas, monospace; font-weight: 700; color: #0b3d64; }
+</style>
+</head>
+<body>
+
+<h1>EE8203 — Department-Level Campus Network</h1>
+<p class="sub">Complete technical documentation &nbsp;·&nbsp; Faculty of Engineering, University of Ruhuna
+&nbsp;·&nbsp; GNS3 implementation</p>
+
+<div class="why">
+<b>What this document is</b>
+This is not the submitted report. It is the working record of the project: what was
+built, what every decision was, why it was made rather than the alternative, and
+what every piece of code does line by line. It is written so that the whole system
+can be understood and defended without re-deriving anything from the devices.
+Where a decision has a cost, the cost is stated.
+</div>
+
+<div class="toc">
+<b>Contents</b>
+<ol>
+  <li>Scope and the shape of the system</li>
+  <li>Environment and platform</li>
+  <li>Network design</li>
+  <li>Security and access control</li>
+  <li>Network automation</li>
+  <li>Monitoring</li>
+  <li>Challenges, faults and lessons learned</li>
+  <li>Verification and evidence</li>
+  <li>Repository map</li>
+</ol>
+</div>
+
+<h2>1. Scope and the shape of the system</h2>
+
+<p class="lead">The task is a campus network connecting four departments — DEIE, DCEE,
+DMME and DIS — with enforced inter-department security policy, configuration
+automation, and continuous monitoring. Everything runs inside GNS3 on a single
+laptop.</p>
+
+<p>The system has four layers, and it is worth being clear which problem each solves,
+because the rest of the document is organised around them:</p>
+
+<table>
+<tr><th style="width:22%">Layer</th><th>What it provides</th><th style="width:26%">Built with</th></tr>
+<tr><td><b>Transport</b></td><td>Frames and packets reach the right place: VLANs, trunks, spanning tree, OSPF, NAT</td><td>Cisco IOSv and IOSvL2</td></tr>
+<tr><td><b>Policy</b></td><td>Only permitted traffic crosses department boundaries</td><td>Extended named ACLs on the core pair</td></tr>
+<tr><td><b>Automation</b></td><td>Configuration is described once and applied repeatably</td><td>Netmiko for routers, Ansible for switches</td></tr>
+<tr><td><b>Observation</b></td><td>The state of the network is visible and faults raise alerts</td><td>Zabbix 6.0 over SNMPv2c</td></tr>
+</table>
+
+<p>A recurring theme, which appears four separate times in section 7, is the gap between
+the third and fourth layers: <b>configuration that reads correctly is not evidence that
+the network works.</b> Every one of the hardest faults in this project had a correct-looking
+configuration and a broken data path.</p>
+
+<h3>1.1 Final device inventory</h3>
+
+<table>
+<tr><th>Device</th><th class="mono">Management address</th><th>Image</th><th>Role</th></tr>
+<tr><td>R-EDGE</td><td class="mono">10.99.0.2 (Lo0)</td><td>IOSv 15.9(3)M6</td><td>Edge router, static default route, NAT overload</td></tr>
+<tr><td>R-CORE</td><td class="mono">10.99.0.1 (Lo0)</td><td>IOSv 15.9(3)M6</td><td>Core router, OSPF area 0, dual-homed to the core pair</td></tr>
+<tr><td>SW-CORE-1</td><td class="mono">10.99.99.2</td><td>IOSvL2 15.2</td><td>Core L3 switch; HSRP active VLAN 10, 20, 99</td></tr>
+<tr><td>SW-CORE-2</td><td class="mono">10.99.99.3</td><td>IOSvL2 15.2</td><td>Core L3 switch; HSRP active VLAN 30, 40</td></tr>
+<tr><td>SW-D-DEIE</td><td class="mono">10.99.99.11</td><td>IOSvL2 15.2</td><td>Distribution, DEIE</td></tr>
+<tr><td>SW-D-DCEE</td><td class="mono">10.99.99.12</td><td>IOSvL2 15.2</td><td>Distribution, DCEE</td></tr>
+<tr><td>SW-D-DMME</td><td class="mono">10.99.99.13</td><td>IOSvL2 15.2</td><td>Distribution, DMME</td></tr>
+<tr><td>SW-A-DEIE</td><td class="mono">10.99.99.21</td><td>IOSvL2 15.2</td><td>Access, DEIE</td></tr>
+<tr><td>SW-A-DCEE</td><td class="mono">10.99.99.22</td><td>IOSvL2 15.2</td><td>Access, DCEE</td></tr>
+<tr><td>SW-A-DMME</td><td class="mono">10.99.99.23</td><td>IOSvL2 15.2</td><td>Access, DMME</td></tr>
+<tr><td>SW-A-DIS</td><td class="mono">10.99.99.24</td><td>IOSvL2 15.2</td><td>Access, DIS server farm; dual-homed to the core</td></tr>
+<tr><td>VM-AUTO</td><td class="mono">10.99.99.100</td><td>Ubuntu 22.04</td><td>Netmiko and Ansible automation host, VLAN 99</td></tr>
+<tr><td>VM-ZABBIX</td><td class="mono">10.10.40.20</td><td>Ubuntu 22.04</td><td>Zabbix 6.0 monitoring server, VLAN 40</td></tr>
+<tr><td>PC-ADMIN</td><td class="mono">10.10.10.150</td><td>Docker webterm</td><td>Browser inside the campus, for the Zabbix interface</td></tr>
+<tr><td>PC-DEIE-1/2 … PC-DIS-1/2</td><td class="mono">10.10.x.101/.102</td><td>VPCS</td><td>Eight test hosts, two per department</td></tr>
+</table>
+
+<h2 class="pagebreak">2. Environment and platform</h2>
+
+<h3>2.1 Why GNS3 and not Packet Tracer</h3>
+
+<p>The brief mandates GNS3, and the reason is structural rather than preference. Three
+of the six assessed components cannot be done in Packet Tracer at all:</p>
+
+<ul>
+<li><b>Netmiko</b> requires a real SSH server on the device that an external Python
+process can connect to. Packet Tracer exposes no such interface.</li>
+<li><b>Ansible</b> has the same requirement through the <code>cisco.ios</code> collection.</li>
+<li><b>Zabbix</b> requires a real Linux virtual machine that can poll SNMP.</li>
+</ul>
+
+<p>Packet Tracer simulates protocol behaviour; GNS3 runs the actual Cisco IOS binary
+under QEMU. Only the second can be automated by tools that speak to real devices.</p>
+
+<h3>2.2 Image selection</h3>
+
+<p>Two IOS images were available for the routers: Dynamips <b>c7200</b> and QEMU <b>IOSv
+15.9(3)M6</b>. IOSv was chosen.</p>
+
+<table>
+<tr><th>Factor</th><th>c7200 (Dynamips)</th><th>IOSv (QEMU)</th></tr>
+<tr><td>Memory</td><td>~256 MB</td><td>512 MB</td></tr>
+<tr><td>Interfaces out of the box</td><td>One FastEthernet; needs port adapters added</td><td>Four Gigabit interfaces</td></tr>
+<tr><td>CPU behaviour</td><td>Needs idle-pc calibration; a wrong value pins a host core at 100%</td><td>No calibration needed</td></tr>
+<tr><td>SSH and <code>cisco.ios</code> compatibility</td><td>Older IOS, more edge cases</td><td>IOS 15.9, current</td></tr>
+</table>
+
+<div class="why">
+<b>Why the extra 512&nbsp;MB was accepted</b>
+The c7200 saves about half a gigabyte across two routers, which matters on a 16&nbsp;GB
+host. But it costs port-adapter configuration, FastEthernet naming that would diverge
+from the documented port map, and idle-pc calibration whose failure mode is a wedged
+CPU. Since the automation phase depends on stable SSH behaviour, the newer image was
+worth more than the memory.
+</div>
+
+<h3>2.3 Host resources and the operating envelope</h3>
+
+<p>The build host is an i7-11800H with 8 physical cores (16 logical) and 15.7&nbsp;GB of
+RAM. The GNS3 VM is allocated 8 vCPU and 10&nbsp;GB.</p>
+
+<table>
+<tr><th>Component</th><th>Memory</th></tr>
+<tr><td>9 × IOSvL2 @ 768 MB</td><td>6.9 GB</td></tr>
+<tr><td>2 × IOSv @ 512 MB</td><td>1.0 GB</td></tr>
+<tr><td>GNS3 VM operating system</td><td>~0.7 GB</td></tr>
+<tr><td>VM-AUTO</td><td>2.0 GB</td></tr>
+<tr><td>VM-ZABBIX</td><td>2.5 GB</td></tr>
+<tr><td>Windows host</td><td>~4.0 GB</td></tr>
+<tr><td><b>Total if everything runs</b></td><td><b>~17.1 GB</b></td></tr>
+</table>
+
+<p>That exceeds the available memory, so the topology is <b>never run in full</b>. Devices
+are started per task. This is not a workaround bolted on at the end; it shaped the
+design of the automation, which is why both the Netmiko scripts and the Ansible
+playbooks accept subset filters.</p>
+
+<table>
+<tr><th>Devices running</th><th>Control-plane latency</th><th>Loss</th><th>Automation</th></tr>
+<tr><td>11 network devices + servers</td><td>300–2300 ms</td><td>30–80%</td><td>Fails with timeouts</td></tr>
+<tr><td>4–5 devices</td><td>11–20 ms</td><td>0%</td><td>Reliable</td></tr>
+</table>
+
+<div class="note">
+<b>Operating rule</b>
+Before any automation run, confirm <code>ping</code> to the target is under roughly 50&nbsp;ms
+with no loss. A poor result calls for stopping devices, not for raising timeouts.
+Performance also degrades with GNS3 VM uptime at a constant device count, so the
+recorded demonstration should be made shortly after a restart.
+</div>
+
+<h2 class="pagebreak">3. Network design <span class="weight">30% of marks</span></h2>
+
+<h3>3.1 The three-layer hierarchy</h3>
+
+<p>The network follows the standard core / distribution / access model. Each layer has
+one job, and confining a job to one layer is what makes the design explainable:</p>
+
+<table>
+<tr><th style="width:20%">Layer</th><th>Responsibility</th><th style="width:32%">Devices</th></tr>
+<tr><td><b>Core</b></td><td>All inter-VLAN routing, all policy enforcement, the single crossing point between departments</td><td>SW-CORE-1, SW-CORE-2</td></tr>
+<tr><td><b>Distribution</b></td><td>Aggregate one department's access switches onto the core; carry VLANs over 802.1Q trunks</td><td>SW-D-DEIE, SW-D-DCEE, SW-D-DMME</td></tr>
+<tr><td><b>Access</b></td><td>Attach end hosts to a single VLAN</td><td>SW-A-DEIE, SW-A-DCEE, SW-A-DMME, SW-A-DIS</td></tr>
+<tr><td><b>Edge</b></td><td>Internet boundary, address translation, default route origination</td><td>R-CORE, R-EDGE</td></tr>
+</table>
+
+<h3>3.2 VLAN scheme</h3>
+
+<table>
+<tr><th>VLAN</th><th>Name</th><th class="mono">Subnet</th><th class="mono">Gateway (HSRP virtual)</th><th>Purpose</th></tr>
+<tr><td>10</td><td>VLAN_DEIE</td><td class="mono">10.10.10.0/24</td><td class="mono">10.10.10.1</td><td>Engineering workstations</td></tr>
+<tr><td>20</td><td>VLAN_DCEE</td><td class="mono">10.10.20.0/24</td><td class="mono">10.10.20.1</td><td>Administration hosts</td></tr>
+<tr><td>30</td><td>VLAN_DMME</td><td class="mono">10.10.30.0/24</td><td class="mono">10.10.30.1</td><td>Workshop lab hosts</td></tr>
+<tr><td>40</td><td>VLAN_DIS</td><td class="mono">10.10.40.0/24</td><td class="mono">10.10.40.1</td><td>Faculty IT hub, server farm</td></tr>
+<tr><td>99</td><td>MGMT</td><td class="mono">10.99.99.0/24</td><td class="mono">10.99.99.1</td><td>Device management, SSH only</td></tr>
+<tr><td>100</td><td>NATIVE</td><td class="mono">none</td><td class="mono">none</td><td>Native VLAN on every trunk</td></tr>
+</table>
+
+<h4>Why VLAN 100 exists and carries nothing</h4>
+
+<p>On an 802.1Q trunk, frames belonging to the native VLAN are transmitted <b>untagged</b>.
+If the native VLAN were left at the default of VLAN 1, and VLAN 1 were also carrying
+user traffic, an attacker could exploit that asymmetry: a double-tagged frame whose
+outer tag matches the native VLAN has its outer tag stripped by the first switch and
+is then forwarded into whatever the inner tag names — VLAN hopping.</p>
+
+<p>Setting the native VLAN to an unused VLAN 100, and never allowing VLAN 100 on any
+trunk's allowed list, means every frame that crosses a trunk is tagged, and any
+untagged frame arriving on a trunk lands in a VLAN with no hosts, no SVI and no
+routing. The attack has nowhere to go.</p>
+
+<h3>3.3 Addressing</h3>
+
+<p>Three ranges are used, chosen so that the purpose of any address is readable from
+its prefix:</p>
+
+<table>
+<tr><th class="mono">Range</th><th>Purpose</th></tr>
+<tr><td class="mono">10.10.0.0/16</td><td>Department user and server VLANs</td></tr>
+<tr><td class="mono">10.99.99.0/24</td><td>Out-of-band management VLAN</td></tr>
+<tr><td class="mono">10.99.0.0/24</td><td>Router management loopbacks</td></tr>
+<tr><td class="mono">10.255.255.0/24</td><td>Point-to-point routed links, carved into /30s</td></tr>
+<tr><td class="mono">192.168.25.0/24</td><td>Simulated internet, outside NAT</td></tr>
+</table>
+
+<h4>Point-to-point links</h4>
+
+<table>
+<tr><th>Link</th><th class="mono">Subnet</th><th class="mono">Side A</th><th class="mono">Side B</th></tr>
+<tr><td>R-EDGE ↔ Internet</td><td class="mono">192.168.25.0/24</td><td class="mono">.10 (Gi0/0)</td><td class="mono">.2 (gateway)</td></tr>
+<tr><td>R-EDGE ↔ R-CORE</td><td class="mono">10.255.255.0/30</td><td class="mono">.1 (Gi0/1)</td><td class="mono">.2 (Gi0/1)</td></tr>
+<tr><td>R-CORE ↔ SW-CORE-1</td><td class="mono">10.255.255.4/30</td><td class="mono">.5 (Gi0/2)</td><td class="mono">.6 (Gi0/0)</td></tr>
+<tr><td>R-CORE ↔ SW-CORE-2</td><td class="mono">10.255.255.8/30</td><td class="mono">.9 (Gi0/3)</td><td class="mono">.10 (Gi0/0)</td></tr>
+</table>
+
+<div class="why">
+<b>Why /30 rather than /24 on inter-device links</b>
+A /30 provides exactly two usable addresses, which is exactly what a point-to-point
+link needs. It makes the routing table honest — each link appears as a distinct
+subnet — and it removes any possibility of an unexpected third device appearing on a
+transit segment. The cost is address-space efficiency, which is irrelevant inside
+10.0.0.0/8.
+</div>
+
+<h4>Why routers are managed on loopbacks</h4>
+
+<p>R-CORE and R-EDGE are not members of VLAN 99, because they are routers rather than
+switches and have no SVI in that VLAN. They are instead managed on
+<code>Loopback0</code> addresses advertised into OSPF.</p>
+
+<p>A loopback interface never goes down. If R-CORE's link to SW-CORE-1 fails, its
+loopback remains reachable through SW-CORE-2, because OSPF simply recomputes the path.
+Managing a router on a physical interface address would tie management reachability
+to the health of one specific cable.</p>
+
+<h3>3.4 Centralising inter-VLAN routing on the core</h3>
+
+<p>Every department SVI — the gateway address each host points at — lives on the core
+pair. The distribution and access switches operate purely at Layer 2.</p>
+
+<div class="why">
+<b>The decision, and the alternative</b>
+The brief describes the distribution switches as Layer 3 devices, so this is a
+deliberate deviation. The alternative is to put each department's SVI on its own
+distribution switch, which shortens the path for intra-department traffic.
+<br><br>
+It was rejected because of <b>where the policy has to live</b>. The inter-department ACL
+must be applied wherever traffic crosses a VLAN boundary. With distributed SVIs, the
+same policy would have to be replicated on three distribution switches and kept
+identical on all of them. With centralised SVIs, every packet that crosses a
+department boundary must transit the core, so a single enforcement point cannot be
+bypassed.
+</div>
+
+<p><b>The cost</b> is that the core becomes a traffic concentration point and every
+inter-VLAN packet takes a longer path. At four VLANs on one site, that cost is
+negligible; the design would need revisiting at campus scale with dozens of VLANs.</p>
+
+<h3>3.5 Core redundancy: HSRP</h3>
+
+<p>A single core switch would be a single point of failure for the <i>entire</i> campus:
+its loss would sever every inter-VLAN path and isolate all four departments from each
+other and from the internet. The core is therefore a pair, running HSRP on every SVI.</p>
+
+<table>
+<tr><th>VLAN</th><th class="mono">SW-CORE-1 SVI</th><th class="mono">SW-CORE-2 SVI</th><th class="mono">Virtual IP</th><th>HSRP active</th><th>STP root</th></tr>
+<tr><td>10</td><td class="mono">10.10.10.2</td><td class="mono">10.10.10.3</td><td class="mono">10.10.10.1</td><td>SW-CORE-1 (pri 110)</td><td>SW-CORE-1</td></tr>
+<tr><td>20</td><td class="mono">10.10.20.2</td><td class="mono">10.10.20.3</td><td class="mono">10.10.20.1</td><td>SW-CORE-1 (pri 110)</td><td>SW-CORE-1</td></tr>
+<tr><td>30</td><td class="mono">10.10.30.2</td><td class="mono">10.10.30.3</td><td class="mono">10.10.30.1</td><td>SW-CORE-2 (pri 110)</td><td>SW-CORE-2</td></tr>
+<tr><td>40</td><td class="mono">10.10.40.2</td><td class="mono">10.10.40.3</td><td class="mono">10.10.40.1</td><td>SW-CORE-2 (pri 110)</td><td>SW-CORE-2</td></tr>
+<tr><td>99</td><td class="mono">10.99.99.2</td><td class="mono">10.99.99.3</td><td class="mono">10.99.99.1</td><td>SW-CORE-1 (pri 110)</td><td>SW-CORE-1</td></tr>
+</table>
+
+<h4>Why the active role alternates rather than one switch being a standby</h4>
+
+<p>A conventional active/standby pair leaves half the core hardware idle, and the idle
+device's health is unproven until the day it is needed. Splitting VLANs across the
+pair means both switches forward production traffic continuously, so a fault in
+either is visible immediately rather than at failover time. Each remains standby for
+the other's VLANs, so a single failure moves all five gateways to the survivor.</p>
+
+<h4>Why <code>preempt</code> is configured on both</h4>
+
+<p>Without <code>preempt</code>, a switch that recovers after a failure remains standby
+indefinitely. The carefully planned load split would silently collapse onto one core
+after the first transient fault and stay that way, which is worse than never having
+split it — because the design document would no longer describe the network.</p>
+
+<h4>Why STP root placement must match the HSRP active switch</h4>
+
+<div class="why">
+<b>The mechanism</b>
+Suppose SW-CORE-1 is the HSRP gateway for VLAN 10, but SW-CORE-2 is the spanning-tree
+root for VLAN 10. A host's frame to its gateway is forwarded at Layer 2 towards the
+root — so it arrives at SW-CORE-2, which does not own the virtual IP. The frame must
+then cross the peer link to SW-CORE-1, be routed, and cross back.
+<br><br>
+Every VLAN 10 packet would traverse the peer link twice for no reason, turning Po1
+into a bottleneck and doubling latency for that department. Aligning the two means
+the Layer 2 path leads directly to the device that owns the Layer 3 gateway.
+</div>
+
+<p>This is why <code>spanning-tree vlan 10,20,99 priority 24576</code> on SW-CORE-1 exactly
+mirrors the HSRP priority table above.</p>
+
+<h3>3.6 The peer link: LACP EtherChannel</h3>
+
+<p>SW-CORE-1 and SW-CORE-2 are joined by two physical links — <code>Gi0/1</code> and
+<code>Gi0/2</code> on each — bundled into <code>Port-channel1</code> with LACP.</p>
+
+<p>A redundant pair joined by a <i>single</i> peer link has re-introduced a single point
+of failure at exactly the place that was supposed to remove one: that link carries all
+HSRP hello packets and all traffic for VLANs homed on the non-active core. Bundling
+two links removes it and doubles the available bandwidth.</p>
+
+<p>The ports are cabled symmetrically (<code>Gi0/1↔Gi0/1</code>, <code>Gi0/2↔Gi0/2</code>) so the
+configuration is byte-identical on both sides:</p>
+
+<pre>interface range GigabitEthernet0/1 - 2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 100
+ switchport trunk allowed vlan 10,20,30,40,99
+ channel-group 1 mode active</pre>
+
+<p><code>mode active</code> means LACP actively negotiates rather than assuming the far end
+is willing. A misconfiguration on one side leaves the bundle down and visible, rather
+than forming a silent, unprotected loop.</p>
+
+<h3>3.7 Dual-homing and the deliberate Layer 2 loop</h3>
+
+<p>Each distribution switch, and SW-A-DIS, has two uplinks — one to each core. This
+creates a Layer 2 loop by design. Spanning tree blocks one path and reactivates it
+automatically if the primary fails.</p>
+
+<table>
+<tr><th>Switch</th><th>To SW-CORE-1</th><th>To SW-CORE-2</th><th class="mono">Allowed VLANs</th></tr>
+<tr><td>SW-D-DEIE</td><td class="mono">Gi0/0 → Gi0/3</td><td class="mono">Gi0/1 → Gi0/3</td><td class="mono">10,99</td></tr>
+<tr><td>SW-D-DCEE</td><td class="mono">Gi0/0 → Gi1/0</td><td class="mono">Gi0/1 → Gi1/0</td><td class="mono">20,99</td></tr>
+<tr><td>SW-D-DMME</td><td class="mono">Gi0/0 → Gi1/1</td><td class="mono">Gi0/1 → Gi1/1</td><td class="mono">30,99</td></tr>
+<tr><td>SW-A-DIS</td><td class="mono">Gi0/0 → Gi1/2</td><td class="mono">Gi0/1 → Gi1/2</td><td class="mono">40,99</td></tr>
+</table>
+
+<p>Access switches are <b>single-homed</b> to their own department's distribution switch.
+The failure domain of that link is one department's user population, which is an
+acceptable exposure; the redundancy budget is spent at the core, where a failure would
+affect the entire campus.</p>
+
+<p>SW-A-DIS attaches directly to the core rather than through a distribution switch,
+because the DIS server farm has no separate distribution tier. It therefore behaves
+like a distribution switch (dual-homed) while presenting access ports.</p>
+
+<h3>3.8 VLAN pruning on trunks</h3>
+
+<p>Each downlink carries only its own department VLAN plus management — not all five.
+Only the core peer link carries every VLAN, because it must.</p>
+
+<div class="why">
+<b>Two reasons</b>
+<b>1. Broadcast containment.</b> A broadcast in VLAN 30 has no reason to traverse the
+DEIE branch of the topology. Pruning confines each department's broadcast domain to
+its own branch.
+<br>
+<b>2. Defence in depth.</b> A host compromised in DMME cannot even <i>see</i> DEIE frames,
+independent of any ACL. The ACL is the policy; the pruning means the policy is not the
+only thing standing between departments.
+<br><br>
+It also gives the Ansible project a genuine reason for <code>host_vars</code>: each switch
+has a different allowed-VLAN list, so it is a property of the individual device rather
+than of its layer.
+</div>
+
+<h3>3.9 Routing</h3>
+
+<h4>OSPF single area</h4>
+
+<p>OSPF process 1, area 0, runs on R-EDGE, R-CORE, SW-CORE-1 and SW-CORE-2. All
+department subnets, the management VLAN, the point-to-point links and both router
+loopbacks are advertised.</p>
+
+<pre>router ospf 1
+ router-id 10.99.0.1
+ passive-interface Loopback0
+ network 10.99.0.1 0.0.0.0 area 0
+ network 10.255.255.0 0.0.0.3 area 0
+ network 10.255.255.4 0.0.0.3 area 0
+ network 10.255.255.8 0.0.0.3 area 0</pre>
+
+<p>A single area is correct at this scale. Areas exist to limit the size of the
+link-state database and confine SPF recalculation; with four routing devices there is
+nothing to confine, and multiple areas would add ABR configuration and summarisation
+complexity for no benefit.</p>
+
+<h4><code>passive-interface default</code> on the core switches</h4>
+
+<pre>router ospf 1
+ router-id 10.99.99.2
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
+ no passive-interface Vlan99
+ network 10.10.10.0 0.0.0.255 area 0
+ ...</pre>
+
+<div class="why">
+<b>Advertising a subnet and forming adjacencies on it are different things</b>
+A <code>network</code> statement does two things at once: it advertises the subnet, and it
+starts sending OSPF hellos on any interface matching it. The department SVIs need the
+first and must not do the second.
+<br><br>
+Without <code>passive-interface default</code>, the core would flood OSPF hellos into all
+four user VLANs. That is wasted bandwidth, but more seriously it is a security
+exposure: any host in a department VLAN could form an OSPF adjacency and inject routes
+into the campus routing table.
+<br><br>
+<code>Vlan99</code> is deliberately left non-passive so the two cores peer directly across
+the peer link rather than routing to each other via R-CORE.
+</div>
+
+<h4>Point-to-point network type</h4>
+
+<p>The /30 links are Ethernet, so OSPF treats them as broadcast networks and elects a
+DR and BDR — a pointless election on a link that can only ever hold two routers.
+Declaring <code>ip ospf network point-to-point</code> on both ends skips the election,
+converges faster, and produces simpler LSAs.</p>
+
+<div class="warn">
+<b>The trap</b>
+A mismatch is <i>not</i> rejected. Hellos are still exchanged, the adjacency reaches
+FULL, and <code>show ip ospf neighbor</code> looks perfect — but each side describes the
+link differently in its router LSA and <b>no route is ever installed</b>. This cost
+real debugging time and is documented fully in section 7.4.
+</div>
+
+<h4>Equal-cost multipath</h4>
+
+<p>R-CORE is dual-homed to both cores, so it learns every campus subnet twice with
+equal cost and load-shares across both links:</p>
+
+<pre>O   10.10.10.0/24 [110/2] via 10.255.255.10, GigabitEthernet0/3
+                  [110/2] via 10.255.255.6,  GigabitEthernet0/2</pre>
+
+<h4>Default route and NAT</h4>
+
+<pre>ip route 0.0.0.0 0.0.0.0 192.168.25.2
+
+ip access-list standard NAT_PERMITTED
+ permit 10.10.10.0 0.0.0.255
+ permit 10.10.20.0 0.0.0.255
+
+ip nat inside source list NAT_PERMITTED interface GigabitEthernet0/0 overload
+
+router ospf 1
+ default-information originate</pre>
+
+<p>Three separate mechanisms, each doing one job:</p>
+
+<ul>
+<li>The <b>static default route</b> gives R-EDGE somewhere to send unknown destinations.</li>
+<li><code>default-information originate</code> injects that default into OSPF, so every
+interior device learns the way out as <code>O*E2 0.0.0.0/0</code>. Without it, R-EDGE
+alone would know how to reach the internet.</li>
+<li><b>NAT overload</b> (PAT) translates many inside hosts to the single outside
+address by multiplexing on source port.</li>
+</ul>
+
+<div class="why">
+<b>Internet policy is enforced by NAT, not by an ACL</b>
+Only VLAN_DEIE and VLAN_DCEE appear in <code>NAT_PERMITTED</code>. Packets from DMME, DIS
+and the management VLAN reach R-EDGE, find no translation entry, and are discarded
+there.
+<br><br>
+This is deliberate placement: department-to-department policy belongs at the first
+Layer 3 hop, and internet policy belongs at the boundary where translation happens.
+Neither can be bypassed by circumventing the other, and each is enforced at the point
+where the decision naturally exists.
+</div>
+
+<h3>3.10 Why there is only one core router</h3>
+
+<p>A reasonable question, since the core <i>switches</i> are redundant. The answer is
+that redundancy was spent where failure hurts most, and R-CORE is not that place.</p>
+
+<table>
+<tr><th>Device fails</th><th>Consequence</th></tr>
+<tr><td>A single SW-CORE (if unpaired)</td><td><b>Total.</b> All inter-VLAN routing stops; all four departments isolated from each other, from the server farm and from the internet</td></tr>
+<tr><td>R-CORE</td><td>Internet egress is lost for DEIE and DCEE. All inter-VLAN routing continues normally</td></tr>
+</table>
+
+<p>Because the SVIs live on the core switch pair, inter-VLAN routing survives an R-CORE
+failure entirely — DEIE still reaches the server farm, policy still applies, management
+still works. What is lost is a degraded service, not an outage.</p>
+
+<p>A second core router would also not remove the remaining single point of failure:
+R-EDGE is still one router with one link to one simulated internet. Genuinely removing
+that would require dual edge routers <i>and</i> dual ISP links, and the scenario has one
+internet.</p>
+
+<h3>3.11 The management plane</h3>
+
+<p>VLAN 99 carries no user hosts. SSH is permitted only from this VLAN, and VM-AUTO is
+the only host in it. Two consequences follow:</p>
+
+<ul>
+<li>An ACL mistake in a department VLAN cannot lock the team out of the devices —
+which is the highest-likelihood risk in the project's risk register.</li>
+<li>All distribution and access switches use <code>10.99.99.1</code>, the HSRP virtual
+address, as their gateway, so management reachability survives the loss of either
+core.</li>
+</ul>
+
+<h2 class="pagebreak">4. Security and access control <span class="weight">20% of marks</span></h2>
+
+<h3>4.1 Completing the policy</h3>
+
+<p>The brief specifies five inter-department policies and states that the default
+position is an explicit deny. It does not state a position for every pair. The unstated
+pairs were resolved as <b>deny</b>, consistent with the stated default and with the
+restrictive character of the policies that are specified.</p>
+
+<table>
+<tr><th>Source</th><th>Destination</th><th>Action</th><th>Origin</th></tr>
+<tr><td>VLAN_DEIE</td><td>VLAN_DIS</td><td>Permit all</td><td>Specified</td></tr>
+<tr><td>VLAN_DCEE</td><td>VLAN_DIS</td><td>Permit HTTP/HTTPS only</td><td>Specified</td></tr>
+<tr><td>VLAN_DMME</td><td>VLAN_DIS</td><td>Deny all</td><td>Specified</td></tr>
+<tr><td>VLAN_DCEE</td><td>VLAN_DEIE</td><td>Deny all</td><td>Specified</td></tr>
+<tr><td>VLAN_DMME</td><td>VLAN_DCEE</td><td>Deny all</td><td>Specified</td></tr>
+<tr><td>VLAN_DEIE</td><td>VLAN_DCEE / VLAN_DMME</td><td>Deny all</td><td>Default deny</td></tr>
+<tr><td>VLAN_DCEE</td><td>VLAN_DMME</td><td>Deny all</td><td>Default deny</td></tr>
+<tr><td>VLAN_DMME</td><td>VLAN_DEIE</td><td>Deny all</td><td>Default deny</td></tr>
+<tr><td>VLAN_DIS</td><td>VLAN_DEIE</td><td>Permit all</td><td>Return path</td></tr>
+<tr><td>VLAN_DIS</td><td>VLAN_DCEE</td><td>Permit HTTP/HTTPS replies only</td><td>Return path</td></tr>
+<tr><td>VLAN_DIS</td><td>VLAN_DMME</td><td>Deny all</td><td>Default deny</td></tr>
+<tr><td>VM-ZABBIX</td><td>All managed devices</td><td>Permit SNMP and ICMP</td><td>Specified</td></tr>
+<tr><td>MGMT VLAN</td><td>All devices</td><td>Permit SSH</td><td>Specified</td></tr>
+</table>
+
+<h4>Why the VLAN_DIS rows exist — the stateless problem</h4>
+
+<div class="why">
+<b>IOS access lists have no memory of sessions</b>
+They evaluate each packet in isolation. When a DEIE host sends a request to a server
+in DIS, the reply is a <i>separate packet</i> travelling in the opposite direction. It
+enters the core through the VLAN 40 SVI and is evaluated against <i>that</i> interface's
+inbound list.
+<br><br>
+Without an explicit permit for the return direction, replies are silently discarded
+and the permitted DEIE→DIS policy appears not to work, even though the forward rule is
+correct. The VLAN_DIS rows are not additional policy; they are the return half of
+policy already stated.
+</div>
+
+<h3>4.2 Placement</h3>
+
+<table>
+<tr><th>Access list</th><th>Interface</th><th>Direction</th><th>Applied on</th></tr>
+<tr><td class="mono">ACL_DEIE_IN</td><td class="mono">Vlan10</td><td>in</td><td>Both cores</td></tr>
+<tr><td class="mono">ACL_DCEE_IN</td><td class="mono">Vlan20</td><td>in</td><td>Both cores</td></tr>
+<tr><td class="mono">ACL_DMME_IN</td><td class="mono">Vlan30</td><td>in</td><td>Both cores</td></tr>
+<tr><td class="mono">ACL_DIS_IN</td><td class="mono">Vlan40</td><td>in</td><td>Both cores</td></tr>
+<tr><td class="mono">MGMT_SSH</td><td class="mono">line vty 0 15</td><td>in (access-class)</td><td>All devices</td></tr>
+</table>
+
+<p><b>Inbound at the source</b> is the standard placement. The packet is discarded at the
+first Layer 3 hop, before it consumes bandwidth across the core or reaches the
+destination segment. Applying the equivalent outbound at the destination would permit
+denied traffic to traverse the entire campus before being dropped.</p>
+
+<p><b>On both cores</b> is not optional: the SVIs exist on both members of the pair, so a
+difference between them would produce policy that succeeds or fails depending on which
+core happened to be the active gateway at that moment. This requirement is the direct
+justification for managing switch configuration with Ansible.</p>
+
+<h3>4.3 The access lists, explained</h3>
+
+<h4>ACL_DEIE_IN — Vlan10 inbound</h4>
+
+<pre>permit ip 10.10.10.0 0.0.0.255 10.10.40.0 0.0.0.255   <i>full access to the server farm</i>
+deny   ip 10.10.10.0 0.0.0.255 10.10.20.0 0.0.0.255   <i>no other department</i>
+deny   ip 10.10.10.0 0.0.0.255 10.10.30.0 0.0.0.255
+deny   ip 10.10.10.0 0.0.0.255 10.99.99.0 0.0.0.255   <i>no management plane</i>
+deny   ip 10.10.10.0 0.0.0.255 10.99.0.0 0.0.0.255
+permit ip 10.10.10.0 0.0.0.255 any                    <i>internet, subject to NAT</i></pre>
+
+<h4>ACL_DCEE_IN — Vlan20 inbound</h4>
+
+<pre>permit tcp 10.10.20.0 0.0.0.255 10.10.40.0 0.0.0.255 eq 80
+permit tcp 10.10.20.0 0.0.0.255 10.10.40.0 0.0.0.255 eq 443
+deny   ip  10.10.20.0 0.0.0.255 10.10.40.0 0.0.0.255   <i>everything else to DIS</i>
+deny   ip  10.10.20.0 0.0.0.255 10.10.10.0 0.0.0.255
+deny   ip  10.10.20.0 0.0.0.255 10.10.30.0 0.0.0.255
+deny   ip  10.10.20.0 0.0.0.255 10.99.99.0 0.0.0.255
+deny   ip  10.10.20.0 0.0.0.255 10.99.0.0 0.0.0.255
+permit ip  10.10.20.0 0.0.0.255 any</pre>
+
+<div class="note">
+<b>Order is the policy</b>
+The two permits precede the deny to the same subnet. Access lists are evaluated top to
+bottom and the <b>first match wins</b>. Reversing these two lines would deny web traffic
+before the permit was ever reached — the configuration would look complete and the
+policy would be wrong.
+</div>
+
+<h4>ACL_DMME_IN — Vlan30 inbound</h4>
+
+<pre>deny   ip 10.10.30.0 0.0.0.255 10.10.40.0 0.0.0.255
+deny   ip 10.10.30.0 0.0.0.255 10.10.10.0 0.0.0.255
+deny   ip 10.10.30.0 0.0.0.255 10.10.20.0 0.0.0.255
+deny   ip 10.10.30.0 0.0.0.255 10.99.99.0 0.0.0.255
+deny   ip 10.10.30.0 0.0.0.255 10.99.0.0 0.0.0.255
+permit ip 10.10.30.0 0.0.0.255 any</pre>
+
+<p>The final <code>permit ip … any</code> looks as though it grants DMME internet access. It
+does not: R-EDGE has no NAT translation entry for <code>10.10.30.0/24</code>, so those
+packets are discarded at the boundary. The policy is enforced at two layers.</p>
+
+<h4>ACL_DIS_IN — Vlan40 inbound</h4>
+
+<pre>permit udp  host 10.10.40.20 10.99.99.0 0.0.0.255 eq 161   <i>Zabbix SNMP</i>
+permit udp  host 10.10.40.20 10.99.0.0 0.0.0.255 eq 161
+permit icmp host 10.10.40.20 10.99.99.0 0.0.0.255          <i>Zabbix ICMP checks</i>
+permit icmp host 10.10.40.20 10.99.0.0 0.0.0.255
+permit ip   10.10.40.0 0.0.0.255 10.10.10.0 0.0.0.255      <i>DEIE return path</i>
+permit tcp  10.10.40.0 0.0.0.255 eq 80  10.10.20.0 0.0.0.255
+permit tcp  10.10.40.0 0.0.0.255 eq 443 10.10.20.0 0.0.0.255
+deny   ip   10.10.40.0 0.0.0.255 10.10.20.0 0.0.0.255
+deny   ip   10.10.40.0 0.0.0.255 10.10.30.0 0.0.0.255
+deny   ip   10.10.40.0 0.0.0.255 10.99.99.0 0.0.0.255
+deny   ip   10.10.40.0 0.0.0.255 10.99.0.0 0.0.0.255
+permit ip   10.10.40.0 0.0.0.255 any</pre>
+
+<p>The four monitoring entries sit <b>above</b> the entries denying access to the
+management plane. Placed below them, the general deny would match first and the
+monitoring server would be unable to poll any device. These entries were written when
+the policy was designed, before VM-ZABBIX existed.</p>
+
+<h3>4.4 The final <code>permit ip &lt;subnet&gt; any</code> — and HSRP</h3>
+
+<div class="warn">
+<b>This entry does far more than permit internet traffic</b>
+HSRP hello packets from the peer core arrive <b>inbound</b> on each SVI. They are sourced
+from an address in the local subnet and sent to the multicast address 224.0.0.102, so
+they match only the final catch-all permit.
+<br><br>
+A narrower final entry — for example <code>permit ip &lt;subnet&gt; 0.0.0.0 0.0.0.0</code>
+or omitting it entirely — would discard those hellos. Each core would stop hearing its
+peer, both would declare themselves Active for every group, and two devices would
+answer for the same virtual IP and MAC address.
+<br><br>
+The evidence is visible in the live counters: <code>ACL_DEIE_IN</code> line 60 accumulated
+118 matches with no user traffic present. Those were HSRP hellos.
+</div>
+
+<h3>4.5 SSH restriction on the control plane</h3>
+
+<pre>ip access-list standard MGMT_SSH
+ permit 10.99.99.0 0.0.0.255
+
+line vty 0 15
+ access-class MGMT_SSH in
+ transport input ssh
+ login local</pre>
+
+<div class="why">
+<b>Why <code>access-class</code> and not a data-plane ACL</b>
+Filtering management traffic on every SVI would require a correct entry on every
+interface of every device, and any interface added later without that entry silently
+opens a path. Applying the restriction where the session actually <i>terminates</i> means
+it holds regardless of the route the packet took to arrive.
+<br><br>
+It also has a safety property: because SSH is protected here rather than by the
+department lists, a mistake in <code>ACL_DEIE_IN</code> cannot remove management access.
+That separation is what makes the ACL work recoverable without console access.
+</div>
+
+<p><code>transport input ssh</code> disables Telnet by omission. That is a deliberate
+hardening choice, not an oversight — the default is <code>all</code>.</p>
+
+<h3>4.6 Test results</h3>
+
+<table>
+<tr><th>From ↓ / To →</th><th>DEIE</th><th>DCEE</th><th>DMME</th><th>DIS</th></tr>
+<tr><td><b>DEIE</b></td><td>Permit</td><td>Deny</td><td>Deny</td><td>Permit</td></tr>
+<tr><td><b>DCEE</b></td><td>Deny</td><td>Permit</td><td>Deny</td><td>Deny (ICMP) / Permit (HTTP)</td></tr>
+<tr><td><b>DMME</b></td><td>Deny</td><td>Deny</td><td>Permit</td><td>Deny</td></tr>
+<tr><td><b>DIS</b></td><td>Permit</td><td>Deny</td><td>Deny</td><td>Permit</td></tr>
+</table>
+
+<p>Denied traffic is rejected with <b>ICMP type 3 code 13, communication administratively
+prohibited</b>, returned by the SVI that enforced the policy:</p>
+
+<pre>*10.10.10.2 icmp_seq=1 ttl=255 (ICMP type:3, code:13, Communication administratively prohibited)</pre>
+
+<p>This is more informative than a silent discard: the test output identifies both that
+the traffic was denied and <i>which device</i> denied it. Silence, by contrast, is
+ambiguous between a policy denial and a broken path — a distinction that mattered
+during troubleshooting.</p>
+
+<h4>Counter distribution as independent evidence</h4>
+
+<p>Match counters were cleared before the test run and captured afterwards from both
+cores:</p>
+
+<table>
+<tr><th>Access list</th><th>Denies matched on SW-CORE-1</th><th>Denies matched on SW-CORE-2</th></tr>
+<tr><td class="mono">ACL_DEIE_IN</td><td>8, 8</td><td>none</td></tr>
+<tr><td class="mono">ACL_DCEE_IN</td><td>8, 8, 8</td><td>none</td></tr>
+<tr><td class="mono">ACL_DMME_IN</td><td>none</td><td>8, 8, 8</td></tr>
+<tr><td class="mono">ACL_DIS_IN</td><td>none</td><td>8, 8</td></tr>
+</table>
+
+<p>SW-CORE-1 is HSRP active for VLANs 10 and 20 and enforces those policies; SW-CORE-2
+is active for 30 and 40 and enforces those. Neither sees the other's traffic. This
+confirms the load distribution designed in section 3.5 through a mechanism entirely
+independent of <code>show standby brief</code> — and demonstrates that both cores carry
+production traffic rather than one sitting idle.</p>
+
+<p>Each count of eight is five ICMP echo requests plus three traceroute probes.</p>
+
+<h2 class="pagebreak">5. Network automation <span class="weight">30% of marks</span></h2>
+
+<h3>5.1 Tool selection: why Netmiko for routers and Ansible for switches</h3>
+
+<p>The split is not arbitrary. It follows from the shape of the two configuration
+problems.</p>
+
+<table>
+<tr><th></th><th>Routers (2 devices)</th><th>Switches (9 devices)</th></tr>
+<tr><td><b>Nature of the task</b></td><td>Each router is unique. R-EDGE has NAT and a default route; R-CORE has three point-to-point links. Almost nothing is shared.</td><td>Highly repetitive. Nine devices differ mainly in which VLAN and which ports, with identical structure.</td></tr>
+<tr><td><b>What varies</b></td><td>Whole configuration blocks</td><td>A handful of values within a fixed pattern</td></tr>
+<tr><td><b>Scaling</b></td><td>Adding a router means describing a new device</td><td>Adding a switch means adding one <code>host_vars</code> file</td></tr>
+<tr><td><b>Procedural control needed</b></td><td>High — bootstrap sequencing, per-section verification, restoring a wiped device</td><td>Low — declare the desired state and let the tool converge</td></tr>
+</table>
+
+<div class="why">
+<b>The honest summary</b>
+Ansible is better at "make these nine devices identical". Netmiko is better at "do
+this specific sequence of things to this specific device, and let me control exactly
+what happens when a step fails".
+<br><br>
+The strongest evidence for this split is what building the Netmiko side actually
+required: a state-comparison function, a dry-run mode, connection retries, and
+per-device convergence reporting. Every one of those is something Ansible provides as
+standard. Writing them by hand is the cost of the procedural control that the router
+work needed — and it is precisely why the same approach would be the wrong choice for
+nine near-identical switches.
+</div>
+
+<h4>Limitations of each, in this scenario</h4>
+
+<table>
+<tr><th>Tool</th><th>Limitation encountered</th></tr>
+<tr><td>Netmiko</td><td>No credential management, no state model, no dry-run, no parallelism. All had to be written. Defaults assume physical hardware and required substantial timeout tuning.</td></tr>
+<tr><td>Ansible</td><td><code>ios_config</code> compares raw text, so any command IOS stores differently from how it is typed breaks idempotency — three separate instances of this were found. Parallelism had to be reduced from five to one on this platform. Cannot reach a device that has no configuration at all.</td></tr>
+<tr><td>Both</td><td>Neither can configure a device it cannot reach. A wiped device requires an out-of-band bootstrap before automation can begin.</td></tr>
+</table>
+
+<h3>5.2 Netmiko: structure</h3>
+
+<pre>netmiko/
+├── inventory/
+│   ├── devices.yaml        connection parameters, timeouts, SNMP values
+│   └── routers.yaml        intended router configuration, as data
+├── lib/
+│   └── common.py           shared: inventory, credentials, logging, connection
+├── deploy_snmp.py          SNMP to all 11 devices
+├── configure_routers.py    full router build from intended state
+└── logs/                   timestamped transcripts, one per run</pre>
+
+<p>The organising principle is <b>separation of data from code</b>. No script contains an
+IP address, hostname, community string or interface name. Changing the SNMP trap
+destination is an edit to YAML; changing <i>how</i> SNMP is deployed is an edit to Python.
+The two change for different reasons and at different rates.</p>
+
+<h3>5.3 <code>lib/common.py</code> — function by function</h3>
+
+<h4><span class="fn">load_yaml(path)</span></h4>
+<p>Reads a YAML file, raising <code>FileNotFoundError</code> with the full path if it is
+missing. Trivial, but it exists so that a missing inventory produces a clear message
+rather than a <code>NoneType</code> error forty lines later.</p>
+
+<h4><span class="fn">load_inventory(path)</span></h4>
+<pre>defaults = inventory.get("defaults", {})
+merged = []
+for device in inventory.get("devices", []):
+    merged.append({**defaults, **device})
+inventory["devices"] = merged</pre>
+<p>Reads the inventory and merges the shared <code>defaults</code> block into every device
+entry. The dictionary unpacking order is significant: <code>defaults</code> first, device
+second, so <b>anything set on an individual device overrides the default</b>. Callers
+receive complete connection parameters and never need to know defaults exist.</p>
+
+<h4><span class="fn">get_password()</span></h4>
+<pre>password = os.environ.get("NET_PASSWORD")
+if password:
+    return password
+return getpass.getpass("Device password: ")</pre>
+<p>Obtains the device password without ever storing it in the repository. The
+environment variable allows unattended runs; the interactive fallback uses
+<code>getpass</code>, which suppresses echo.</p>
+<div class="note"><b>Security property</b> The repository can be searched for the password and
+will not contain it. This is demonstrable rather than asserted.</div>
+
+<h4><span class="fn">setup_logging(script_name)</span></h4>
+<p>Configures logging to the console and to a file named
+<code>&lt;script&gt;-YYYYmmdd-HHMMSS.log</code>. A separate file per run matters because the
+log <i>is</i> the evidence that a change was applied; overwriting it would destroy the
+record of the previous run.</p>
+<pre>logging.getLogger("paramiko").setLevel(logging.WARNING)</pre>
+<p>Paramiko logs the SSH negotiation and the full IOSv licence banner at INFO level for
+every device, which buried the script's own output. Warnings and errors from it are
+still wanted, so the logger is raised to WARNING rather than disabled.</p>
+
+<h4><span class="fn">connect(device, password, attempts=3, retry_delay=10)</span></h4>
+
+<p>Opens an SSH session, retrying on failure. Three design decisions are embedded here.</p>
+
+<p><b>1. Parameter filtering.</b></p>
+<pre>params = {k: v for k, v in device.items() if k not in ("name", "role")}</pre>
+<p>The inventory carries descriptive fields — <code>name</code> and <code>role</code> — that
+Netmiko does not accept. They are stripped rather than being kept in a separate
+structure, so the inventory stays readable.</p>
+
+<p><b>2. Failure returns <code>None</code> rather than raising.</b> One unreachable switch
+should not abandon a run across eleven. The caller marks it FAILED and continues.</p>
+
+<p><b>3. Authentication failures do not retry.</b></p>
+<pre>except NetmikoAuthenticationException:
+    logging.error("[%s] authentication failed - check credentials", name)
+    return None
+
+except NetmikoTimeoutException:
+    logging.warning("[%s] timed out on attempt %d", name, attempt)</pre>
+<div class="why">
+<b>Why the two are treated differently</b>
+A timeout is <i>transient</i>: an emulated device sharing CPU may simply have been too
+busy to complete the login sequence, and will often succeed moments later. Retrying is
+correct.
+<br><br>
+Wrong credentials are <i>permanent</i>. Retrying cannot succeed, wastes thirty seconds
+per device, and on a device with login throttling risks locking the account. The
+distinction between a transient and a permanent failure is the difference between a
+retry loop that helps and one that merely delays the inevitable.
+</div>
+
+<h4><span class="fn">run_command(connection, command, read_timeout)</span></h4>
+<pre>return connection.send_command_timing(
+    command, read_timeout=read_timeout, last_read=3.0,
+    strip_prompt=True, strip_command=True)</pre>
+<div class="why">
+<b>Why <code>send_command_timing</code> rather than <code>send_command</code></b>
+<code>send_command</code> waits for two things: the command echoed back, and the prompt
+reappearing in an expected form. Both are pattern matches.
+<br><br>
+An emulated device under load returns output in fragments, and a broken echo fails the
+match <b>no matter how long the timeout is</b> — this is a pattern failure, not a slow
+response, which is why raising <code>read_timeout</code> to 180 seconds changed nothing.
+<br><br>
+<code>send_command_timing</code> instead reads until the device stops producing output for
+<code>last_read</code> seconds. No echo matching, no prompt regex. Slower by a few seconds
+per command, and dramatically more tolerant.
+</div>
+
+<h4><span class="fn">summarise(results)</span></h4>
+<p>Prints a per-device summary and returns a shell exit code — 0 if every device
+succeeded, 1 otherwise. The exit code lets the script be used in a pipeline or checked
+by another tool, rather than requiring a human to read the output.</p>
+
+<h3>5.4 <code>deploy_snmp.py</code></h3>
+
+<p>Deploys SNMPv2c to all eleven devices. This is the archetypal automation task:
+identical configuration, many devices, no variation.</p>
+
+<h4><span class="fn">build_snmp_commands(snmp)</span></h4>
+<pre>return [
+    f"snmp-server community {snmp['community']} {snmp['access']}",
+    f"snmp-server host {snmp['trap_host']} version 2c {snmp['community']}",
+    f"snmp-server location {snmp['location']}",
+    f"snmp-server contact {snmp['contact']}",
+    "snmp-server enable traps snmp linkdown linkup coldstart warmstart",
+]</pre>
+<p>Built from the inventory rather than written literally, so the community string or
+trap destination is changed in one place and propagates to eleven devices.</p>
+
+<h4><span class="fn">current_snmp_config(connection, read_timeout)</span></h4>
+<pre>output = run_command(connection,
+    "show running-config | include ^snmp-server", read_timeout)
+return [line.strip() for line in output.splitlines() if line.strip()]</pre>
+<p>Reads the SNMP lines currently on the device. The <code>^</code> anchor matters: without
+it, the filter would also match lines that merely mention <code>snmp-server</code> in a
+description or comment.</p>
+
+<h4><span class="fn">needs_change(current, intended)</span></h4>
+<pre>return [line for line in intended if line not in current]</pre>
+<div class="why">
+<b>This one line is the idempotency mechanism</b>
+Pushing configuration unconditionally would also produce a correct device. But then
+every run would report a change, and the script could not be used to <i>verify</i> that
+an estate is already in its intended state.
+<br><br>
+The difference is between a script that <b>applies</b> configuration and one that
+<b>converges</b> to it. Only the second can answer "is the network as documented?"
+without altering it.
+</div>
+
+<h4><span class="fn">configure_device(device, password, intended, timeouts)</span></h4>
+
+<p>Returns <code>CHANGED</code>, <code>UNCHANGED</code> or <code>FAILED</code>. The interesting parts
+are the parameters passed to Netmiko:</p>
+
+<pre>connection.send_config_set(missing, read_timeout=read_timeout,
+                           cmd_verify=False, exit_config_mode=False)
+run_command(connection, "end", read_timeout)
+run_command(connection, "write memory", read_timeout)</pre>
+
+<table>
+<tr><th>Setting</th><th>Reason</th></tr>
+<tr><td><code>cmd_verify=False</code></td><td>Stops Netmiko waiting for each command to be echoed back before sending the next. On an emulated device that echo can take seconds per line, and the wait provides no benefit — the result is verified by re-reading the configuration on the next run.</td></tr>
+<tr><td><code>exit_config_mode=False</code></td><td>Netmiko's own <code>exit_config_mode()</code> does not accept the read timeout passed to this call and falls back to a much shorter internal default, which these devices regularly exceed. A timeout there would abandon a change that had <i>already been applied</i> — leaving the device configured but not saved.</td></tr>
+<tr><td><code>"end"</code> and <code>"write memory"</code> as plain commands</td><td>So the same generous read timeout applies to every stage of the change, including saving.</td></tr>
+</table>
+
+<p>The <code>finally</code> block always disconnects, including when an exception was raised.
+Without it, a crashed run leaves an abandoned VTY line on the device, and a handful of
+crashed runs exhausts the available lines and locks the estate out.</p>
+
+<h4><span class="fn">select_devices(devices, args)</span> and the filters</h4>
+<pre>python3 deploy_snmp.py --role core_switch
+python3 deploy_snmp.py --device SW-CORE-1</pre>
+<p>These exist because the host cannot run every device at once. Deploying to a subset
+and repeating for the rest reaches the same end state — which is only true <i>because</i>
+the script is idempotent. The filters are therefore not a workaround; they are a
+property that follows from the design.</p>
+
+<h3>5.5 <code>configure_routers.py</code></h3>
+
+<p>Builds R-CORE and R-EDGE from nothing: interface addressing, OSPF, NAT rules and the
+access list controlling internet egress. This is the script the reset-and-replay test
+exercises.</p>
+
+<h4>The data model</h4>
+
+<p><code>routers.yaml</code> describes each router as a list of <b>sections</b>. Each section
+carries the command that reads its current state and the lines it should contain:</p>
+
+<pre>- name: Gi0/1 - link to R-EDGE
+  check: show running-config interface GigabitEthernet0/1
+  lines:
+    - interface GigabitEthernet0/1
+    - description Link to R-EDGE
+    - ip address 10.255.255.2 255.255.255.252
+    - ip ospf network point-to-point
+    - no shutdown</pre>
+
+<p>The script contains no router-specific knowledge at all. It only knows how to compare
+a section against a device and close the gap.</p>
+
+<h4><span class="fn">line_is_present(line, current)</span></h4>
+<pre>if line.startswith("no "):
+    return line[3:].strip() not in current
+return line in current</pre>
+<div class="why">
+<b>The negation rule</b>
+Most lines are a straightforward membership test. Negated commands are different: IOS
+does <b>not</b> record <code>no shutdown</code> in the running configuration — it simply
+omits <code>shutdown</code>.
+<br><br>
+Testing for the literal string <code>no shutdown</code> would report it missing on every
+run, the script would push it every time, and it would never converge. A <code>no X</code>
+line is therefore treated as satisfied when <code>X</code> is <b>absent</b>.
+<br><br>
+This is the same class of problem as three separate Ansible idempotency traps in
+section 7 — the command you type is not always the string that gets stored.
+</div>
+
+<h4><span class="fn">read_section(connection, command, read_timeout, attempts=3)</span></h4>
+<pre>for attempt in range(1, attempts + 1):
+    output = run_command(connection, command, read_timeout)
+    lines = [l.strip() for l in output.splitlines() if l.strip()]
+    if lines:
+        return lines
+    if attempt &lt; attempts:
+        logging.warning("empty response to '%s', re-reading", command)
+        time.sleep(3)
+return []</pre>
+<div class="warn">
+<b>An unreadable section is not an absent one</b>
+A read that returns nothing because the device was too busy is <b>indistinguishable</b>
+from a section that genuinely does not exist. Treating the first as the second is
+dangerous: the script concludes that correctly configured interfaces are missing and
+pushes them again, destroying the idempotency the whole design depends on.
+<br><br>
+This was a real bug, observed in a dry run that reported thirteen correct configuration
+lines as missing. Retrying costs a few seconds in the rare case where a section really
+is absent — a router with no OSPF process yet — and prevents a false negative in the
+common case where the device was merely slow.
+<br><br>
+The underlying principle: <b>an idempotency check compares intent with observed state,
+so a failure to observe must never be reported as a difference.</b>
+</div>
+
+<h4><span class="fn">apply_section(connection, section, read_timeout)</span></h4>
+<p>Pushes a section <b>in full</b> rather than only the missing lines. The first line of a
+section is usually a context command — <code>interface GigabitEthernet0/1</code> or
+<code>router ospf 1</code>. Sending <code>ip address …</code> without the preceding
+<code>interface …</code> would apply it in the wrong context or be rejected outright.</p>
+
+<h4>Dry-run mode</h4>
+<pre>python3 configure_routers.py --dry-run</pre>
+<p>Reports what would change without applying anything. This is the hand-built
+equivalent of <code>ansible-playbook --check</code>, and building it is a concrete data
+point for the tool comparison: it is roughly twenty lines of extra logic in the
+Netmiko script, and a single command-line flag in Ansible.</p>
+
+<h3>5.6 Reset and replay</h3>
+
+<p>The graded test wipes a device and requires it restored within five minutes.
+Measured result on R-CORE:</p>
+
+<table>
+<tr><th class="mono">Time</th><th>Event</th></tr>
+<tr><td class="mono">—</td><td><code>write erase</code> and <code>reload</code>; console bootstrap applied</td></tr>
+<tr><td class="mono">07:24:19</td><td>Script starts against a router missing 13 configuration lines</td></tr>
+<tr><td class="mono">07:25:30</td><td><b>CHANGED</b>, configuration saved — <b>71 seconds</b></td></tr>
+<tr><td class="mono">07:26:27</td><td>Dry run reports <b>UNCHANGED</b> — converged, not merely written</td></tr>
+<tr><td class="mono">07:27:38</td><td>SNMP restored by <code>deploy_snmp.py</code></td></tr>
+</table>
+
+<p>R-EDGE independently confirmed the restoration: its OSPF adjacency to R-CORE
+returned to FULL, having been down since the wipe.</p>
+
+<h4>The bootstrap, and why it must be acknowledged</h4>
+
+<div class="why">
+<b>Automation has a reachability floor</b>
+Netmiko cannot configure a device it cannot reach. A wiped router has no address, no
+user account and no SSH server, so something outside the automation must establish
+those first.
+<br><br>
+Production networks solve this with console servers, zero-touch provisioning, or DHCP
+with TFTP. Here it is done by console, using the file
+<code>configs/bootstrap/R-CORE-bootstrap.cfg</code>: hostname, domain name, credentials,
+an RSA key, the loopback the inventory targets, and one link to the core pair.
+<br><br>
+Stating this boundary clearly is a stronger position than implying the script does
+everything, because the boundary is real and every practitioner knows it.
+</div>
+
+<p>The bootstrap also includes <code>ip ospf network point-to-point</code> on the uplink —
+not optional. Without it the wiped router reverts to the broadcast default while
+SW-CORE-1 retains point-to-point, and the resulting mismatch produces an adjacency that
+reaches FULL while no route is ever installed (section 7.4).</p>
+
+<h3 class="pagebreak">5.7 Ansible: structure</h3>
+
+<pre>ansible/
+├── ansible.cfg
+├── inventory/
+│   ├── hosts.yml               switches grouped by layer
+│   ├── group_vars/
+│   │   ├── all/vars.yml        connection settings, references the vault
+│   │   ├── all/vault.yml       encrypted device password
+│   │   └── core_switches.yml   variables shared by a layer
+│   └── host_vars/
+│       └── SW-*.yml            VLANs, trunks and ports for one switch
+├── roles/
+│   ├── vlans/  trunking/  access_ports/  stp/  management/
+├── site.yml                    runs the roles in dependency order
+└── playbooks/rollback/rollback.yml</pre>
+
+<div class="note">
+<b>Why the variable directories sit beside the inventory</b>
+Ansible searches for <code>group_vars</code> and <code>host_vars</code> relative to <b>both</b>
+the playbook directory and the inventory directory. With both placed next to
+<code>site.yml</code>, any playbook in a subdirectory — such as
+<code>playbooks/rollback/</code> — finds neither, and fails with an undefined variable.
+Placing them beside the inventory makes them available to every playbook regardless of
+where it lives.
+</div>
+
+<h3>5.8 <code>ansible.cfg</code> — every setting and why</h3>
+
+<table>
+<tr><th>Setting</th><th>Value</th><th>Reason</th></tr>
+<tr><td><code>forks</code></td><td>2</td><td>Ansible opens five connections in parallel by default. Five simultaneous CLI sessions overwhelm these emulated control planes: a host that answers <code>ansible -m ping</code> still fails a real task with an authentication timeout, because a full CLI session costs far more than a single exchange.</td></tr>
+<tr><td><code>log_path</code></td><td><code>logs/ansible.log</code></td><td>Writes a full transcript of every run. The brief requires playbook output as an appendix, and the automation host console has no copy and paste.</td></tr>
+<tr><td><code>vault_password_file</code></td><td><code>vault_pass.txt</code></td><td>Avoids a prompt on every run while keeping the password itself out of the repository (excluded by <code>.gitignore</code>).</td></tr>
+<tr><td><code>host_key_checking</code></td><td>False</td><td>Lab devices are wiped and rebuilt, regenerating their SSH host keys. Strict checking would fail every connection after a rebuild.</td></tr>
+<tr><td><code>display_skipped_hosts</code></td><td>True</td><td>So a <code>--check</code> run reads as a complete statement about the estate rather than a list of exceptions.</td></tr>
+<tr><td><code>command_timeout</code> / <code>connect_timeout</code></td><td>120</td><td>The defaults of 30 s assume physical hardware and abandon a session that is merely slow.</td></tr>
+</table>
+
+<h3>5.9 Variables: the group / host split</h3>
+
+<table>
+<tr><th>Lives in</th><th>Contains</th><th>Why there</th></tr>
+<tr><td><code>group_vars/all/vars.yml</code></td><td>Connection type, network OS, credentials, <code>native_vlan</code>, <code>mgmt_gateway</code></td><td>True of every device without exception</td></tr>
+<tr><td><code>group_vars/core_switches.yml</code></td><td>All six VLANs, the five trunk downlinks</td><td>True of both cores and only the cores</td></tr>
+<tr><td><code>host_vars/SW-D-DEIE.yml</code></td><td>Department VLAN, its three trunks with pruned VLAN lists</td><td>Different on every switch</td></tr>
+<tr><td><code>host_vars/SW-CORE-1.yml</code></td><td><code>stp_root_primary</code>, <code>stp_root_secondary</code></td><td>The one thing that differs between the two cores</td></tr>
+</table>
+
+<p>The trunk pruning is what makes this split necessary rather than stylistic. Each
+downlink allows a different VLAN list, so that list cannot live in a group variable —
+it is a property of the individual switch.</p>
+
+<h4>Credential handling: Ansible Vault</h4>
+
+<pre>group_vars/all/vars.yml:
+    ansible_password: "{{ vault_device_password }}"
+
+group_vars/all/vault.yml:      (encrypted, committed)
+    $ANSIBLE_VAULT;1.1;AES256 ...
+
+vault_pass.txt:                (gitignored, never committed)</pre>
+
+<p>The plain file <i>names</i> what is needed and is readable by anyone; the values are
+readable only with the vault password. The encrypted file is committed deliberately —
+that is the point of the arrangement: the credential travels with the project while
+remaining unreadable.</p>
+
+<div class="note">
+<b>Contrast with Netmiko</b>
+Netmiko has no credential story at all; one had to be invented (environment variable
+or prompt). Ansible ships a standard, documented mechanism. This is a concrete
+difference for the tool comparison rather than a generic claim about maturity.
+</div>
+
+<h3>5.10 The roles</h3>
+
+<h4><code>vlans</code></h4>
+<pre>- name: Ensure the intended VLANs are present and forwarding
+  cisco.ios.ios_vlans:
+    config: "{{ switch_vlans | map('combine', {'shutdown': 'disabled'}) | list }}"
+    state: merged</pre>
+
+<p>Two decisions worth explaining.</p>
+
+<p><b><code>shutdown: disabled</code> is injected into every VLAN</b> via a Jinja filter
+rather than being repeated in thirty inventory entries. This is not cosmetic: a VLAN
+can exist, carry the right name and hold the right ports <i>while being locally shut
+down</i>, in which case it forwards nothing and has no spanning-tree instance. That is
+the state the rollback playbook leaves behind, and a rebuild that only recreates the
+VLAN produces a switch whose configuration reads as correct and whose hosts cannot
+reach their gateway (section 7.6).</p>
+
+<p><b><code>state: merged</code> rather than <code>overridden</code>.</b> <code>merged</code> adds and
+corrects the VLANs listed without removing others. <code>overridden</code> would delete
+anything not named — correct for a rollback, too destructive for <code>site.yml</code>,
+where a VLAN created for an unrelated reason should not vanish because it is absent
+from these variables.</p>
+
+<h4><code>trunking</code></h4>
+<pre>- name: Configure trunk interfaces
+  cisco.ios.ios_config:
+    parents: "interface {{ item.name }}"
+    lines:
+      - "description {{ item.description }}"
+      - "switchport trunk encapsulation dot1q"
+      - "switchport mode trunk"
+      - "switchport trunk native vlan {{ native_vlan }}"
+      - "switchport trunk allowed vlan {{ item.allowed_vlans }}"
+  loop: "{{ trunk_ports }}"</pre>
+<p><code>parents</code> establishes the interface context; <code>lines</code> are compared
+against the running configuration within that context and only differing lines are
+issued. That comparison is what makes a second run report no change.</p>
+
+<h4><code>access_ports</code></h4>
+<pre>- "{{ portfast_command }}"        # defaults to: spanning-tree portfast edge
+- "spanning-tree bpduguard enable"</pre>
+<div class="warn">
+<b>The portfast trap</b>
+From IOS 15.2(4)E onwards, <code>spanning-tree portfast</code> is <i>accepted</i> at the
+prompt but <b>saved</b> as <code>spanning-tree portfast edge</code>. Declaring the shorter
+form would never match the running configuration, and this task would report a change
+on every single run.
+<br><br>
+The exact string is therefore held as a role default variable, so the value can be
+adjusted for an older release without editing the task.
+</div>
+<p>The pairing of the two commands is deliberate: <code>portfast</code> assumes no switch is
+attached, and <code>bpduguard</code> enforces that assumption by disabling the port if a
+BPDU ever arrives. Neither belongs on a trunk.</p>
+
+<h4><code>stp</code></h4>
+<pre>- "spanning-tree vlan {{ stp_root_primary }} priority {{ stp_priority_primary }}"</pre>
+<div class="warn">
+<b>Why not <code>root primary</code></b>
+<code>spanning-tree vlan 10 root primary</code> is a <b>macro</b>. IOS evaluates it once,
+converts it to a priority value, and stores only the result — the running configuration
+holds <code>priority 24576</code> with no trace of the word "primary".
+<br><br>
+Declaring the macro would therefore never match the device and the task would report a
+change on every run. Worse, the macro is <i>relative to whatever the current root
+happens to be</i>, so the value it produces depends on the state of the network when it
+runs. A declarative tool needs a value that does not move.
+</div>
+
+<h4><code>management</code></h4>
+<pre>- "ip route 0.0.0.0 0.0.0.0 {{ mgmt_gateway }}"</pre>
+<p>Gives the Layer 2 switches a default route. This role exists because of the fault in
+section 7.7 — <code>ip default-gateway</code> was configured on all seven switches and was
+completely inert.</p>
+
+<h3>5.11 <code>site.yml</code> and the ordering dependency</h3>
+
+<pre>roles:
+  - vlans          # a VLAN must exist before anything can reference it
+  - trunking       # trunks carry VLANs, so the VLANs must already exist
+  - access_ports   # a port can only be assigned to a VLAN that exists
+  - stp            # root placement is per VLAN</pre>
+
+<p>This is a genuine dependency chain, not a preference. Running the roles in any other
+order produces errors or silently incomplete configuration on a switch being built from
+nothing — a port assigned to a VLAN that does not yet exist is rejected, and a
+spanning-tree priority for a non-existent VLAN applies to nothing.</p>
+
+<p>A second play then applies the <code>management</code> role to the Layer 2 switches only.
+The core pair is excluded because it learns a default through OSPF from R-EDGE.</p>
+
+<h3>5.12 The rollback playbook</h3>
+
+<pre>ansible-playbook playbooks/rollback/rollback.yml --limit SW-A-DEIE
+ansible-playbook site.yml --limit SW-A-DEIE</pre>
+
+<h4>What it deliberately does <i>not</i> do</h4>
+
+<div class="why">
+<b>A rollback that requires console access to recover from is not a rollback</b>
+Wiping a switch completely would also remove the VLAN 99 SVI, the SSH configuration
+and the uplink trunk carrying management traffic. The device would then be unreachable
+and recoverable only by console — which is an outage with extra steps.
+<br><br>
+The playbook therefore removes only what the automation owns — access ports, the
+department VLAN, and spanning-tree root placement — and leaves the management path
+intact.
+</div>
+
+<h4>The safety assertion</h4>
+<pre>- name: Require an explicit target
+  ansible.builtin.assert:
+    that:
+      - ansible_limit is defined
+    fail_msg: &gt;-
+      This playbook must be run with --limit naming the device to roll back.</pre>
+<p>An unrestricted run would strip every access port in the campus. Requiring
+<code>--limit</code> makes the target an explicit decision rather than the default.
+<code>serial: 1</code> processes one device at a time, so a fault in the rollback affects a
+single switch rather than the whole estate simultaneously.</p>
+
+<h4>Protected ports</h4>
+<pre>rollback_protected_ports:
+  - GigabitEthernet2/1     # SW-A-DIS, VM-AUTO</pre>
+<p>VM-AUTO reaches every device through that port. A rollback that reset it would
+disconnect the automation host from the network it manages, leaving nothing able to run
+the playbook that rebuilds the switch.</p>
+
+<h3>5.13 Idempotency: the measured result</h3>
+
+<pre>PLAY RECAP
+SW-A-DCEE   : ok=4  changed=0  unreachable=0  failed=0
+SW-A-DEIE   : ok=4  changed=0  unreachable=0  failed=0
+SW-A-DIS    : ok=4  changed=0  unreachable=0  failed=0
+SW-A-DMME   : ok=4  changed=0  unreachable=0  failed=0
+SW-CORE-1   : ok=5  changed=0  unreachable=0  failed=0
+SW-CORE-2   : ok=5  changed=0  unreachable=0  failed=0
+SW-D-DCEE   : ok=3  changed=0  unreachable=0  failed=0
+SW-D-DEIE   : ok=3  changed=0  unreachable=0  failed=0
+SW-D-DMME   : ok=3  changed=0  unreachable=0  failed=0</pre>
+
+<p><code>ansible-playbook site.yml --check</code> across all nine switches after application:
+zero changes. The playbooks describe the network, and Ansible independently agrees.</p>
+
+<h2 class="pagebreak">6. Monitoring</h2>
+
+<h3>6.1 Architecture</h3>
+
+<p>Zabbix 6.0 LTS on VM-ZABBIX (<code>10.10.40.20</code>), polling all eleven devices over
+SNMPv2c. The server sits in VLAN 40 — the server farm — because it is a server; it is
+not in the management VLAN.</p>
+
+<p>That placement has a consequence worth stating: every SNMP query crosses a VLAN
+boundary and is evaluated by the inter-department policy. The four monitoring entries
+in <code>ACL_DIS_IN</code> are what permit it, and they were written before this host
+existed.</p>
+
+<h3>6.2 The SNMP configuration chain</h3>
+
+<table>
+<tr><th>Where the community string lives</th><th>Applied by</th></tr>
+<tr><td><code>netmiko/inventory/devices.yaml</code></td><td>Source of truth</td></tr>
+<tr><td>All eleven devices</td><td><code>deploy_snmp.py</code></td></tr>
+<tr><td>Zabbix global macro <code>{$SNMP_COMMUNITY}</code></td><td>Inherited by all eleven hosts</td></tr>
+</table>
+
+<p>The value exists in exactly two places, and each host references the macro rather
+than a literal — so it is entered once, not eleven times.</p>
+
+<h3>6.3 Triggers</h3>
+
+<table>
+<tr><th>Requirement</th><th>Expression</th><th>Source</th></tr>
+<tr><td>Device unreachable, &gt;3 consecutive polls</td><td class="mono">max(/host/icmpping,#3)=0</td><td>Template</td></tr>
+<tr><td>Interface down</td><td class="mono">Interface *: Link down</td><td>Template, per discovered interface</td></tr>
+<tr><td>CPU &gt; 80% for 60 s</td><td class="mono">min(/host/system.cpu.util,1m)&gt;80</td><td>Project</td></tr>
+<tr><td>Student defined</td><td class="mono">last(/host/system.hw.uptime[hrSystemUptime.0])&lt;10m</td><td>Project</td></tr>
+</table>
+
+<p><code>max(...,#3)=0</code> reads as "the last three checks all returned zero" — exactly the
+three consecutive polls the brief specifies. <code>min(...,1m)&gt;80</code> means <i>every</i>
+sample in the last minute exceeded 80%, so a brief spike does not fire it, which is
+what "for more than 60 seconds" means.</p>
+
+<h4>Why the restart trigger was chosen</h4>
+
+<div class="why">
+<b>It detects a fault this design would otherwise conceal</b>
+The campus has a redundant core pair running HSRP, so a single device restarting may
+cause no visible outage: traffic fails over, no interface stays down for long, and no
+other trigger fires. Users notice nothing.
+<br><br>
+An unplanned restart nonetheless means something happened — power loss, a crash, or an
+unsaved configuration that has now reverted — and the network is running <b>without
+redundancy</b> until the device returns.
+<br><br>
+Identifying a blind spot created by one's own redundancy is a considered choice rather
+than an arbitrary threshold.
+</div>
+
+<p>It uses <code>hrSystemUptime</code> rather than <code>sysUpTime</code>. The latter measures how
+long the SNMP <i>agent</i> has been running and resets when SNMP is reconfigured — which
+the automation does routinely — so using it would raise a false alarm on every
+<code>deploy_snmp.py</code> run.</p>
+
+<h4>Platform limitation</h4>
+
+<p>IOSvL2 does not implement <code>CISCO-PROCESS-MIB</code>, so the CPU item returns no data
+on the switches. The CPU trigger is defined on R-CORE and R-EDGE, which run IOSv and
+report the OID normally. On physical Catalyst hardware the same template would collect
+it from every device. This is a limitation of the emulated platform, not of the design.</p>
+
+<h3>6.4 Dashboard and demonstration</h3>
+
+<p>The dashboard <b>FoE-UoR Network</b> carries five widgets: the campus topology map,
+problems by severity (the open trigger count), an interface traffic graph for the core
+switches in both directions, a live problem list, and an SNMP availability summary.</p>
+
+<p>Zabbix 6.0 provides no user-interface export for global dashboards, so the export is
+taken through the API — see <code>zabbix/export_config.py</code>, which also exports the
+host definitions and the map.</p>
+
+<p><b>The trigger demonstration:</b> shutting <code>SW-CORE-1 Gi0/3</code> raised
+<code>Interface Gi0/3(Downlink to SW-D-DEIE): Link down</code> within the polling interval,
+while SW-D-DEIE remained available through its second uplink to SW-CORE-2. The alert
+fired with no loss of service — monitoring and resilience demonstrated in one action.</p>
+
+<h2 class="pagebreak">7. Challenges, faults and lessons learned <span class="weight">20% of marks</span></h2>
+
+<p class="lead">Eleven substantive faults were encountered. They are grouped by
+mechanism, because the grouping is the finding: four of them share a single pattern
+that is worth naming.</p>
+
+<h3>7.1 The dominant pattern: correct configuration, broken network</h3>
+
+<div class="lesson">
+<b>Four independent faults, one shape</b>
+In each case the configuration was present, syntactically valid, and read correctly to
+a human and to the tooling. In each case the network did not work. In each case the
+cause was an <b>unmanaged default or an untyped attribute</b> that silently contradicted
+the stated intent — and the fault was invisible until something exercised the specific
+path it affected.
+<br><br>
+The general lesson: <b>a configuration that reads correctly is not evidence that it
+works.</b> Verification must exercise the data path, not inspect the control plane.
+</div>
+
+<h3>7.2 Fault: GNS3 node settings are copied from the template</h3>
+<p><b>Symptom.</b> VM-AUTO kept recreating a second network adapter and attaching it to a
+VMnet, breaking its campus connectivity, even after the template was set to one adapter.</p>
+<p><b>Root cause.</b> Node settings are snapshotted from the template when the node is
+created. Later template edits do not reach existing nodes. The node still declared two
+adapters.</p>
+<p><b>Fix.</b> Edit the node itself (right-click → Configure → Network), not Preferences.</p>
+<p><b>Cost.</b> Several hours across two virtual machines.</p>
+<div class="lesson"><b>Lesson</b> When a GNS3 node ignores a preference change, check the node before
+anything else. The same applies to which server a node runs on.</div>
+
+<h3>7.3 Fault: frames silently discarded on cross-server links</h3>
+<p><b>Symptom.</b> A VPCS host showed <code>connected</code> on the switch port, in the right
+VLAN, with correct addressing — and could not reach anything. Its MAC never appeared in
+the switch's address table. No error was raised anywhere.</p>
+<p><b>Root cause.</b> The node ran on the local (Windows) GNS3 server while the switches
+ran inside the GNS3 VM, so the link was a cross-server UDP tunnel bridged by
+<code>ubridge</code> using Npcap. Stale bridges from deleted nodes persist in the running
+server process and are not cleared by deleting the node — the error
+<code>bridge 'VPCS-…' already exist</code> confirmed it.</p>
+<p><b>Fix.</b> Move all VPCS nodes onto the GNS3 VM, removing the cross-server path
+entirely.</p>
+<p><b>Measured effect.</b> Host-to-host latency fell from <b>100–460 ms to 5–12 ms</b>.</p>
+<div class="lesson"><b>Lesson</b> "Link up" is reported by the emulator, not by the data path. A
+port showing <code>connected</code> with no MAC learned means frames are not arriving,
+regardless of what any status indicator says.</div>
+
+<h3>7.4 Fault: a FULL OSPF adjacency with no route</h3>
+<p><b>Symptom.</b> After R-CORE was wiped for the reset-and-replay test,
+<code>show ip ospf neighbor</code> showed the adjacency at FULL and the log recorded
+<code>LOADING to FULL, Loading Done</code>. SW-CORE-1 had no route to R-CORE's loopback:
+<code>% Subnet not in table</code>.</p>
+<p><b>Root cause.</b> The wiped router's interface reverted to the default <i>broadcast</i>
+OSPF network type while SW-CORE-1 retained <i>point-to-point</i>. Hello timers are
+identical for both types, so hellos are accepted and the adjacency forms — but each
+side describes the link differently in its router LSA, and the resulting inconsistency
+means no route is installed.</p>
+<p><b>Fix.</b> Add <code>ip ospf network point-to-point</code> to the bootstrap file, since it
+is required for <i>reachability</i> and therefore must exist before automation can run.</p>
+<div class="lesson"><b>Lesson</b> OSPF does not reject a network-type mismatch. "Adjacency is up"
+and "routing works" are separate claims and must be verified separately.</div>
+
+<h3>7.5 Fault: an unreadable section reported as absent</h3>
+<p><b>Symptom.</b> A <code>--dry-run</code> of <code>configure_routers.py</code> reported thirteen
+correctly configured lines as missing across four interfaces.</p>
+<p><b>Root cause.</b> The device was too loaded to answer, the read returned an empty
+string, and empty was interpreted as "this section does not exist".</p>
+<p><b>Consequence had it not been caught.</b> A live run would have re-pushed existing
+configuration on every execution, defeating idempotency entirely — and it would have
+looked like the script working correctly.</p>
+<p><b>Fix.</b> Retry an empty read up to three times before concluding a section is absent.</p>
+<div class="lesson"><b>Lesson</b> An idempotency check compares intent with <i>observed</i> state. A
+failure to observe must never be reported as a difference. This distinction is the
+difference between a safe automation tool and a dangerous one.</div>
+
+<h3>7.6 Fault: <code>--check</code> clean, network down</h3>
+<p><b>Symptom.</b> After a rollback and rebuild of SW-A-DEIE,
+<code>ansible-playbook --check</code> reported <b>zero changes</b>, every interface showed
+<code>connected</code> in VLAN 10, and each port's running configuration was exactly as
+intended. Hosts could not reach their gateway.</p>
+<p><b>Root cause.</b> <code>show vlan brief</code> reported VLAN 10 as <code>act/lshut</code> — the
+VLAN existed, held the right name and the right ports, and was <b>locally shut down</b>.
+A shut VLAN forwards nothing and has no spanning-tree instance, which is why
+<code>show spanning-tree vlan 10</code> reported the instance did not exist and the MAC
+table was empty.</p>
+<p>The rollback left it in that state and the rebuild recreated the VLAN without
+clearing the shutdown, <b>because the role never managed that attribute at all</b>.</p>
+<p><b>Fix.</b> Inject <code>shutdown: disabled</code> into every VLAN in the <code>vlans</code> role.</p>
+<div class="lesson">
+<b>The sharpest lesson in the project</b>
+Ansible was reporting <i>truthfully</i>: every line it managed was correct. The set of
+lines it managed was incomplete.
+<br><br>
+No amount of <code>--check</code> could have revealed this, because <code>--check</code>
+compares intent against reality and <b>the intent itself was silent on the point</b>. An
+idempotency check validates the model, not the network. Only traffic validates the
+network.
+<br><br>
+Recorded in the MOP test plan as: <i>a rollback is verified by a host reaching its
+gateway, not by a playbook exiting cleanly.</i>
+</div>
+
+<h3>7.7 Fault: a command configured and inert</h3>
+<p><b>Symptom.</b> Zabbix could poll the two routers and the two core switches, but none
+of the seven Layer 2 switches. Every failing device was reachable by SSH from VM-AUTO,
+held correct SNMP configuration, and the ACL counters confirmed the queries were being
+forwarded.</p>
+<p><b>The distinguishing factor.</b> VM-AUTO sits in VLAN 99 — the same subnet as the
+switches — so its traffic needs no routing. VM-ZABBIX sits in VLAN 40, so every reply
+had to leave the subnet, and the switches had no default route to leave by.</p>
+<p><b>Root cause.</b> The switches were configured with
+<code>ip default-gateway 10.99.99.1</code>, the correct command for a switch that does not
+route. It takes effect <b>only when <code>ip routing</code> is disabled</b>, and IOSvL2
+enables routing by default <i>without recording that anywhere in the running
+configuration</i>. The command was present, looked right, and did nothing.</p>
+<p><b>The remedy that made it worse.</b> Disabling <code>ip routing</code> to make the original
+command effective removed <i>all</i> connectivity from the switch, including Layer 2
+paths that should have been unaffected.</p>
+<p><b>Fix.</b> An explicit static default route, applied by a new Ansible role so all
+seven switches are configured identically from one source.</p>
+<div class="lesson"><b>Lesson</b> A platform default that is not shown in the configuration can
+silently disable a command that <i>is</i> shown. Absence of evidence in
+<code>show running-config</code> is not evidence of absence.</div>
+
+<h3>7.8 Fault: omitting a command does not remove it</h3>
+<p><b>Symptom.</b> The SW-CORE-2 configuration block was applied to SW-CORE-1 in error.
+Re-applying the correct SW-CORE-1 block did not fix it: HSRP priorities accumulated and
+both switches ended with priority 110 on every group.</p>
+<p><b>Root cause.</b> The correct block simply <i>omits</i> the commands that were wrongly
+set. Silence changes nothing on a device that already has them.</p>
+<p><b>Fix.</b> Explicitly set the intended values, including the defaults
+(<code>standby 30 priority 100</code>).</p>
+<div class="lesson">
+<b>Lesson — and the central argument for declarative tooling</b>
+"Apply the intended configuration" and "re-run the configuration file" are
+<b>different operations</b>. Only the first converges. This single incident is the
+clearest practical justification for Ansible in the whole project, and it happened
+before Ansible was introduced.
+</div>
+
+<h3>7.9 Three idempotency traps in Ansible</h3>
+
+<p>All three share a root cause: <code>ios_config</code> compares <b>raw text</b>, so any
+command IOS stores differently from how it is typed will never match.</p>
+
+<table>
+<tr><th>Typed</th><th>Stored by IOS</th><th>Effect if not handled</th></tr>
+<tr><td class="mono">spanning-tree vlan 10 root primary</td><td class="mono">spanning-tree vlan 10 priority 24576</td><td>Reports changed every run; value also depends on current network state</td></tr>
+<tr><td class="mono">spanning-tree portfast</td><td class="mono">spanning-tree portfast edge</td><td>Reports changed every run</td></tr>
+<tr><td class="mono">no shutdown</td><td class="mono">(absence of <code>shutdown</code>)</td><td>Never converges — handled in Netmiko by the negation rule</td></tr>
+</table>
+
+<div class="lesson"><b>Lesson</b> Before declaring a command in a declarative tool, read it back with
+<code>show running-config</code> and declare <i>that</i> string. The CLI's conveniences —
+macros, abbreviations, implied keywords — are actively hostile to text-comparison
+automation.</div>
+
+<h3>7.10 Netmiko defaults assume physical hardware</h3>
+<p><b>Symptom.</b> The first full run failed on all eleven devices — but with
+<code>Pattern not detected</code> and read timeouts, <i>not</i> authentication errors. Paramiko
+had negotiated and authenticated successfully on every device.</p>
+<p><b>Two distinct causes.</b></p>
+<ul>
+<li>Timeouts written for hardware answering in milliseconds. Raised connection,
+authentication and read timeouts; disabled <code>fast_cli</code>; added retries.</li>
+<li><code>send_command</code> waits for the command echo and the prompt. A loaded emulated
+device returns output in fragments and the match fails <b>regardless of timeout</b> —
+raising <code>read_timeout</code> to 180 s changed nothing, because it was a pattern
+failure, not a slow response. Replaced with <code>send_command_timing</code>.</li>
+</ul>
+<p>Separately, Netmiko's own <code>exit_config_mode()</code> and <code>save_config()</code> do not
+accept the read timeout passed to <code>send_config_set</code> and fall back to a shorter
+internal default — so a run failed at the exit step <i>after</i> the configuration had
+already been applied. Both are now issued as plain commands.</p>
+<div class="lesson"><b>Lesson</b> Read the error, not the symptom. "Everything failed" looked like a
+credentials or connectivity problem; the log showed successful authentication on every
+device and located the fault precisely.</div>
+
+<h3>7.11 Ansible concurrency against emulated devices</h3>
+<p><b>Symptom.</b> <code>ansible all -m ping</code> returned SUCCESS for all nine switches; the
+playbook then failed on several of the same hosts with authentication timeouts.</p>
+<p><b>Root cause.</b> Ansible's default of five parallel connections. <code>ping</code> is one
+trivial exchange per host; a real task opens a full CLI session, sets terminal
+parameters, enters enable mode and reads configuration. Under CPU contention the first
+succeeds and the second times out.</p>
+<p><b>Fix.</b> <code>forks = 2</code>, and <code>--forks 1</code> when heavily loaded.</p>
+<div class="lesson"><b>Lesson</b> A green pre-flight check proves reachability, not capacity. The two
+are different properties and only one of them was being tested.</div>
+
+<h3>7.12 Legacy device crypto against a modern client</h3>
+<p><b>Symptom.</b> <code>ssh admin@10.99.99.2</code> from Ubuntu 22.04:
+<code>no matching key exchange method found</code>.</p>
+<p><b>Root cause.</b> IOS 15.x offers only SHA-1 key exchange and RSA host keys, both
+disabled by default in OpenSSH 8.8 and later.</p>
+<p><b>Fix.</b> A client configuration scoped to <code>Host 10.99.*</code> only, so the exception
+applies to the legacy estate and not to every connection the host makes.</p>
+<p>Netmiko was unaffected, because Paramiko still permits those algorithms — which is
+why the automation worked while the interactive client did not.</p>
+<div class="lesson"><b>Lesson</b> Network equipment lives for a decade while client crypto policy
+moves every few years. Operators routinely need explicit, <i>scoped</i> exceptions for
+older gear. Weakening the client globally would have been the easy and wrong fix.</div>
+
+<h3>7.13 Emulated data planes and bulk transfer</h3>
+<p><b>Symptom.</b> <code>apt update</code> on VM-AUTO through the campus network took over
+thirty minutes. The same operation over the host's NAT interface took minutes.</p>
+<p><b>Root cause.</b> Every packet crosses five software-forwarding emulated devices.
+Effective throughput is 1–10 Mbps with high per-packet overhead.</p>
+<p><b>Fix.</b> Install packages over the host NAT interface, then attach the VM to the
+topology.</p>
+<div class="lesson"><b>Lesson</b> This does not affect the assessed work: Netmiko and Ansible
+transfer configuration text measured in kilobytes and SNMP polling is smaller still.
+Separating bulk provisioning from in-band management is normal operational practice
+rather than a workaround.</div>
+
+<h3>7.14 The performance envelope, measured</h3>
+<p><b>Symptom.</b> <code>%SYS-3-CPUHOG: Task is running for (8000)msecs</code> on SW-CORE-1,
+with repeated OSPF adjacency flaps — while <code>show processes cpu</code> reported only
+42%.</p>
+<p><b>Root cause.</b> IOS measures a task's duration in wall-clock time. When the
+hypervisor does not schedule the VM, IOS concludes a process ran for eight seconds. The
+guest's own CPU figure is <b>unreliable under oversubscription</b>, because IOS measures
+busy time as a fraction of the time it is scheduled, not of elapsed time.</p>
+<div class="lesson"><b>Lesson</b> Guest CPU metrics cannot be trusted when the host is
+oversubscribed. Measure at the hypervisor. And the remedy for a starved emulated estate
+is fewer running devices, never longer timeouts.</div>
+
+<h3>7.15 What would be done differently</h3>
+
+<ol>
+<li><b>Verify functionally after every change, not structurally.</b> Four faults were
+invisible to configuration inspection and to <code>--check</code>. A host pinging its
+gateway would have caught all four immediately.</li>
+<li><b>Read commands back before declaring them.</b> The three idempotency traps would
+have been avoided by a single <code>show running-config</code> before writing each task.</li>
+<li><b>Establish the performance envelope first.</b> Days were spent treating symptoms of
+CPU starvation as network faults. Measuring the 4–5 device limit early would have
+reframed several investigations.</li>
+<li><b>Put the ACLs in Ansible too.</b> The design document argues that Ansible exists
+<i>because</i> the redundant core needs byte-identical ACLs — but the ACLs are still
+maintained by hand, so that claim is not yet enforced by anything.</li>
+<li><b>Keep the credentials out of the repository from the start.</b> They were committed
+early in <code>configs/baseline/*.cfg</code> and are still there.</li>
+</ol>
+
+<h2 class="pagebreak">8. Verification and evidence</h2>
+
+<table>
+<tr><th>What was verified</th><th>How</th><th>Result</th></tr>
+<tr><td>LACP peer link</td><td><code>show etherchannel summary</code></td><td><code>Po1(SU)</code>, both members <code>(P)</code></td></tr>
+<tr><td>HSRP split</td><td><code>show standby brief</code> on both cores</td><td>CORE-1 active 10/20/99, CORE-2 active 30/40, all peers seen</td></tr>
+<tr><td>STP alignment</td><td><code>show spanning-tree vlan 10</code></td><td>Root priority 24586 on SW-CORE-1; SW-D-DEIE root port towards it, second uplink <code>Altn BLK</code></td></tr>
+<tr><td>OSPF and ECMP</td><td><code>show ip ospf neighbor</code>, <code>show ip route</code></td><td>Three FULL adjacencies, all <code>FULL/ -</code>; every subnet with two equal-cost paths</td></tr>
+<tr><td>Internet and NAT</td><td><code>ping 8.8.8.8</code>, <code>show ip route static</code></td><td>Reachable; <code>S* 0.0.0.0/0 [1/0]</code>; learned interior as <code>O*E2</code></td></tr>
+<tr><td>Baseline reachability</td><td>4×4 ping and traceroute matrix, before ACLs</td><td>All cells pass — the control set</td></tr>
+<tr><td>Policy enforcement</td><td>Same matrix after ACLs, plus counters</td><td>Every cell matches the policy; denials return ICMP 3/13</td></tr>
+<tr><td>Netmiko idempotency</td><td>Two consecutive runs per role group</td><td><code>CHANGED</code> then <code>UNCHANGED</code> on all eleven devices</td></tr>
+<tr><td>Reset and replay</td><td><code>write erase</code> on R-CORE, bootstrap, script</td><td>Restored in <b>71 seconds</b>; dry run then <code>UNCHANGED</code></td></tr>
+<tr><td>Ansible idempotency</td><td><code>ansible-playbook site.yml --check</code></td><td><code>changed=0</code> on all nine switches</td></tr>
+<tr><td>Rollback</td><td>rollback → <code>site.yml</code> → <code>--check</code> → host ping</td><td>changed=3 → changed=2 → changed=0 → gateway reachable</td></tr>
+<tr><td>SNMP path</td><td><code>snmpwalk</code> from VM-ZABBIX to a management address</td><td><code>SW-CORE-1.foe.ruh.ac.lk</code></td></tr>
+<tr><td>Trigger firing</td><td>Shut <code>SW-CORE-1 Gi0/3</code></td><td>Alert within the polling interval; SW-D-DEIE stayed available</td></tr>
+</table>
+
+<h2>9. Repository map</h2>
+
+<table>
+<tr><th>Path</th><th>Contents</th></tr>
+<tr><td class="mono">docs/01-addressing-plan.md</td><td>VLAN and IP plan, HSRP scheme, design decisions</td></tr>
+<tr><td class="mono">docs/02-topology-and-port-map.md</td><td>Device inventory, full physical link map, memory budget</td></tr>
+<tr><td class="mono">docs/03-acl-policy.md</td><td>Policy statement, list definitions, placement, test results</td></tr>
+<tr><td class="mono">docs/04-implementation-log.md</td><td>Deviations, faults, constraints, MOP risk register material</td></tr>
+<tr><td class="mono">docs/diagrams/</td><td>Topology build sheet (PDF and HTML source)</td></tr>
+<tr><td class="mono">configs/baseline/</td><td>Manual reference configuration per device</td></tr>
+<tr><td class="mono">configs/bootstrap/</td><td>Console bootstrap for the reset-and-replay test</td></tr>
+<tr><td class="mono">configs/vm-auto/, configs/vm-zabbix/</td><td>Server build notes and network configuration</td></tr>
+<tr><td class="mono">netmiko/</td><td>Inventory, shared library, two scripts, execution logs</td></tr>
+<tr><td class="mono">ansible/</td><td>Inventory, group and host variables, five roles, site.yml, rollback</td></tr>
+<tr><td class="mono">zabbix/</td><td>Dashboard, host and map exports; export script; monitoring notes</td></tr>
+<tr><td class="mono">Screenshots/</td><td>Baseline matrix, post-ACL matrix, Netmiko runs, Ansible runs, Zabbix</td></tr>
+</table>
+
+</body>
+</html>
