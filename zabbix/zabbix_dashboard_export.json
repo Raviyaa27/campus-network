@@ -1,0 +1,160 @@
+[
+    {
+        "dashboardid": "369",
+        "name": "FoE-UoR Network",
+        "userid": "1",
+        "private": "1",
+        "display_period": "30",
+        "auto_start": "1",
+        "uuid": "",
+        "pages": [
+            {
+                "dashboard_pageid": "19912",
+                "name": "",
+                "display_period": "0",
+                "widgets": [
+                    {
+                        "widgetid": "68424",
+                        "type": "map",
+                        "name": "FoE-UoR Campus Topology",
+                        "x": "9",
+                        "y": "5",
+                        "width": "14",
+                        "height": "7",
+                        "view_mode": "0",
+                        "fields": [
+                            {
+                                "type": "0",
+                                "name": "rf_rate",
+                                "value": "30"
+                            },
+                            {
+                                "type": "1",
+                                "name": "reference",
+                                "value": "FSDPN"
+                            },
+                            {
+                                "type": "8",
+                                "name": "sysmapid",
+                                "value": "2"
+                            }
+                        ]
+                    },
+                    {
+                        "widgetid": "68425",
+                        "type": "problemsbysv",
+                        "name": "Problems by severity",
+                        "x": "0",
+                        "y": "4",
+                        "width": "9",
+                        "height": "4",
+                        "view_mode": "0",
+                        "fields": [
+                            {
+                                "type": "0",
+                                "name": "rf_rate",
+                                "value": "30"
+                            },
+                            {
+                                "type": "2",
+                                "name": "groupids",
+                                "value": "20"
+                            }
+                        ]
+                    },
+                    {
+                        "widgetid": "68426",
+                        "type": "svggraph",
+                        "name": "Graph",
+                        "x": "9",
+                        "y": "0",
+                        "width": "14",
+                        "height": "5",
+                        "view_mode": "0",
+                        "fields": [
+                            {
+                                "type": "0",
+                                "name": "rf_rate",
+                                "value": "30"
+                            },
+                            {
+                                "type": "1",
+                                "name": "ds.hosts.0.0",
+                                "value": "SW-CORE-*"
+                            },
+                            {
+                                "type": "1",
+                                "name": "ds.items.0.0",
+                                "value": "Interface *: Bits received"
+                            },
+                            {
+                                "type": "1",
+                                "name": "ds.hosts.1.0",
+                                "value": "SW-CORE-*"
+                            },
+                            {
+                                "type": "1",
+                                "name": "ds.items.1.0",
+                                "value": "Interface *: Bits sent"
+                            },
+                            {
+                                "type": "1",
+                                "name": "ds.color.1",
+                                "value": "0040FF"
+                            },
+                            {
+                                "type": "0",
+                                "name": "righty",
+                                "value": "0"
+                            }
+                        ]
+                    },
+                    {
+                        "widgetid": "68427",
+                        "type": "problems",
+                        "name": "Problems",
+                        "x": "0",
+                        "y": "8",
+                        "width": "9",
+                        "height": "5",
+                        "view_mode": "0",
+                        "fields": [
+                            {
+                                "type": "2",
+                                "name": "groupids",
+                                "value": "20"
+                            }
+                        ]
+                    },
+                    {
+                        "widgetid": "68428",
+                        "type": "hostavail",
+                        "name": "Host availability",
+                        "x": "0",
+                        "y": "0",
+                        "width": "9",
+                        "height": "4",
+                        "view_mode": "0",
+                        "fields": [
+                            {
+                                "type": "0",
+                                "name": "rf_rate",
+                                "value": "30"
+                            },
+                            {
+                                "type": "2",
+                                "name": "groupids",
+                                "value": "20"
+                            },
+                            {
+                                "type": "0",
+                                "name": "interface_type",
+                                "value": "2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
