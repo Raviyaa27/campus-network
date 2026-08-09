@@ -10,6 +10,7 @@ venv/
 # Ansible
 *.retry
 ansible/*.log
+ansible/logs/*.log
 
 # GNS3 runtime artefacts
 *.gns3_backup
