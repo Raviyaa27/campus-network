@@ -1,0 +1,23 @@
+---
+# Management plane routing for the Layer 2 switches.
+#
+# These switches hold a single SVI in VLAN 99 and do not route between VLANs.
+# They were originally configured with "ip default-gateway", which is the
+# conventional command for exactly that situation - but it only takes effect
+# when "ip routing" is disabled, and IOSvL2 enables routing by default without
+# recording it in the running configuration.
+#
+# The result was a switch with no default route at all. Management from VLAN 99
+# worked, because that is the same subnet and needs no routing. Monitoring from
+# VLAN 40 failed, because every reply had to leave the subnet and there was
+# nowhere to send it. Nothing in the ACLs or the SNMP configuration was wrong.
+#
+# Disabling "ip routing" to make "ip default-gateway" work is not a safe remedy
+# on this platform: doing so removed all connectivity from the switch, including
+# Layer 2 paths that should have been unaffected. An explicit static default
+# route achieves the same result and leaves routing enabled.
+
+- name: Ensure a default route towards the management gateway
+  cisco.ios.ios_config:
+    lines:
+      - "ip route 0.0.0.0 0.0.0.0 {{ mgmt_gateway }}"

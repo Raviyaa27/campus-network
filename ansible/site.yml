@@ -28,3 +28,13 @@
     - trunking
     - access_ports
     - stp
+
+# The Layer 2 switches need a default route so they can reply to anything
+# outside VLAN 99 - the monitoring server in VLAN 40 in particular. The core
+# pair is excluded because it learns a default through OSPF from R-EDGE.
+- name: Configure management routing on the Layer 2 switches
+  hosts: distribution_switches:access_switches
+  gather_facts: false
+
+  roles:
+    - management

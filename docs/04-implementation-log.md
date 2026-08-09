@@ -100,7 +100,36 @@ intent against reality and the intent itself was silent on the point. Only
 traffic exposed it. The lesson is recorded in the MOP test plan: a rollback is
 verified by a host reaching its gateway, not by a playbook exiting cleanly.
 
-### 2.7 Netmiko defaults assume physical hardware
+### 2.7 A command that is configured but inert
+
+Zabbix could poll the two routers and the two core switches but not one of the
+seven Layer 2 switches. Every failing device was reachable by SSH from VM-AUTO,
+held the correct SNMP configuration, and was permitted by the access lists,
+whose counters confirmed the queries were being forwarded.
+
+The distinguishing factor was the source. VM-AUTO sits in VLAN 99, the same
+subnet as the switches, so its traffic needs no routing. VM-ZABBIX sits in VLAN
+40, so every reply had to leave the subnet - and the switches had no default
+route to leave by.
+
+The switches were configured with `ip default-gateway 10.99.99.1`, which is the
+correct command for a switch that does not route. It only takes effect when
+`ip routing` is disabled, and IOSvL2 enables routing by default without
+recording that anywhere in the running configuration. The command was present,
+looked right, and did nothing.
+
+Disabling `ip routing` to make it effective was worse: it removed all
+connectivity from the switch, including Layer 2 paths that should have been
+unaffected. The remedy adopted was an explicit static default route, applied by
+a new Ansible role so the seven switches are configured identically from one
+source.
+
+This is the third occasion in the project where the configuration was correct
+and the behaviour was still wrong, and the pattern is the same each time: an
+unmanaged platform default silently contradicted the stated intent, and the
+fault was invisible until something exercised the path it affected.
+
+### 2.8 Netmiko defaults assume physical hardware
 
 The first full run failed on every device with pattern and read timeouts rather
 than authentication errors. Two separate causes:
@@ -117,7 +146,7 @@ Netmiko's own `exit_config_mode()` and `save_config()` do not accept the read
 timeout passed to `send_config_set`, so those steps are issued as plain commands
 instead.
 
-### 2.8 Legacy device crypto against modern clients
+### 2.9 Legacy device crypto against modern clients
 
 IOS 15.x offers only SHA-1 key exchange and RSA host keys, both disabled by
 default in OpenSSH 8.8 and later. Direct `ssh` from Ubuntu 22.04 fails with "no
@@ -127,7 +156,7 @@ Resolved with a client configuration scoped to `10.99.*` only, so the exception
 applies to the legacy estate and not to every connection the host makes.
 Netmiko was unaffected because Paramiko still permits those algorithms.
 
-### 2.9 Emulated data planes are not suitable for bulk transfer
+### 2.10 Emulated data planes are not suitable for bulk transfer
 
 Installing packages on VM-AUTO through the campus network took over thirty
 minutes for `apt update` alone, because every packet crosses five

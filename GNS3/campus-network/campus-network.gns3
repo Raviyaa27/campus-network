@@ -953,6 +953,78 @@
                     }
                 ],
                 "suspend": false
+            },
+            {
+                "filters": {},
+                "link_id": "0b18d005-6874-42ef-9603-d596bc362fb3",
+                "link_style": {
+                    "color": "#000000",
+                    "type": 1,
+                    "width": 2
+                },
+                "nodes": [
+                    {
+                        "adapter_number": 0,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "e0",
+                            "x": -7,
+                            "y": 25
+                        },
+                        "node_id": "f186ed5b-01d6-48a3-bbaf-3effb492d1ee",
+                        "port_number": 0
+                    },
+                    {
+                        "adapter_number": 8,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "Gi2/0",
+                            "x": 65,
+                            "y": 27
+                        },
+                        "node_id": "0cfd2e2d-f41b-481e-94aa-44c3d4c6f677",
+                        "port_number": 0
+                    }
+                ],
+                "suspend": false
+            },
+            {
+                "filters": {},
+                "link_id": "4c9d2d1c-cafd-4f95-bd97-77f31e82402f",
+                "link_style": {
+                    "color": "#000000",
+                    "type": 1,
+                    "width": 2
+                },
+                "nodes": [
+                    {
+                        "adapter_number": 0,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "eth0",
+                            "x": 33,
+                            "y": 74
+                        },
+                        "node_id": "507db4d5-3f99-4aa0-ab25-ad8cb098607a",
+                        "port_number": 0
+                    },
+                    {
+                        "adapter_number": 10,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "Gi2/2",
+                            "x": 25,
+                            "y": -16
+                        },
+                        "node_id": "0cfd2e2d-f41b-481e-94aa-44c3d4c6f677",
+                        "port_number": 0
+                    }
+                ],
+                "suspend": false
             }
         ],
         "nodes": [
@@ -2068,8 +2140,8 @@
                 "symbol": ":/symbols/vmware_guest.svg",
                 "template_id": "b0852505-8e17-4b0c-a4dd-3d422a7d2581",
                 "width": 65,
-                "x": 713,
-                "y": 279,
+                "x": 660,
+                "y": 94,
                 "z": 1
             },
             {
@@ -2100,14 +2172,57 @@
                     "linked_clone": false,
                     "on_close": "power_off",
                     "usage": "",
-                    "use_any_adapter": false,
+                    "use_any_adapter": true,
                     "vmx_path": "D:\\Projects\\Network Project\\VM-ZABBIX\\VM-ZABBIX.vmx"
                 },
                 "symbol": ":/symbols/vmware_guest.svg",
                 "template_id": "1ee0274b-08a3-43ef-a0b0-b8f46806f599",
                 "width": 65,
-                "x": 726,
-                "y": 153,
+                "x": 704,
+                "y": 219,
+                "z": 1
+            },
+            {
+                "compute_id": "vm",
+                "console": 5900,
+                "console_auto_start": false,
+                "console_type": "vnc",
+                "custom_adapters": [],
+                "first_port_name": null,
+                "height": 70,
+                "label": {
+                    "rotation": 0,
+                    "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                    "text": "Zabbix",
+                    "x": 8,
+                    "y": -25
+                },
+                "locked": false,
+                "name": "Zabbix",
+                "node_id": "507db4d5-3f99-4aa0-ab25-ad8cb098607a",
+                "node_type": "docker",
+                "port_name_format": "Ethernet{0}",
+                "port_segment_size": 0,
+                "properties": {
+                    "adapters": 1,
+                    "aux": 5038,
+                    "console_http_path": "/",
+                    "console_http_port": 80,
+                    "console_resolution": "1366x768",
+                    "container_id": "fee59174e4dc0dbc579be772e96650eb20dc315019be958d41847d5b03387c2f",
+                    "environment": "",
+                    "extra_hosts": "",
+                    "extra_volumes": [],
+                    "image": "gns3/webterm:latest",
+                    "mac_address": "02:42:7d:b4:d5:00",
+                    "start_command": null,
+                    "usage": "The /root directory is persistent."
+                },
+                "symbol": "firefox.svg",
+                "template_id": "943dc51d-9698-4cd6-8c41-7b79c5940c6f",
+                "width": 68,
+                "x": 473,
+                "y": -4,
                 "z": 1
             }
         ]

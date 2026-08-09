@@ -27,3 +27,7 @@ ansible_connect_timeout: 120
 # The native VLAN carries no user traffic. Defined once here because every
 # trunk in the campus uses the same value.
 native_vlan: 100
+
+# HSRP virtual address for VLAN 99. Used by the Layer 2 switches as their
+# default route, so management reachability survives the loss of either core.
+mgmt_gateway: 10.99.99.1
