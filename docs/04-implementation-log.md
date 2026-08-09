@@ -129,7 +129,22 @@ and the behaviour was still wrong, and the pattern is the same each time: an
 unmanaged platform default silently contradicted the stated intent, and the
 fault was invisible until something exercised the path it affected.
 
-### 2.8 Netmiko defaults assume physical hardware
+### 2.8 The switch image does not expose CPU utilisation
+
+The brief requires a trigger on CPU utilisation above 80%. The Zabbix template
+`Cisco IOS by SNMP` provides one, but on the IOSvL2 switches the underlying item
+returns no data: IOSvL2 is a virtualised switching image and does not implement
+`CISCO-PROCESS-MIB`, so the OID the template polls does not exist.
+
+The trigger was therefore placed on R-CORE and R-EDGE, which run IOSv. That
+image does implement the MIB and reports CPU utilisation normally.
+
+This is a limitation of the emulated platform rather than of the design. On
+physical Catalyst hardware the same template would collect CPU data from every
+switch. The requirement is met, and the constraint that decided where it is met
+is recorded here.
+
+### 2.9 Netmiko defaults assume physical hardware
 
 The first full run failed on every device with pattern and read timeouts rather
 than authentication errors. Two separate causes:
@@ -146,7 +161,7 @@ Netmiko's own `exit_config_mode()` and `save_config()` do not accept the read
 timeout passed to `send_config_set`, so those steps are issued as plain commands
 instead.
 
-### 2.9 Legacy device crypto against modern clients
+### 2.10 Legacy device crypto against modern clients
 
 IOS 15.x offers only SHA-1 key exchange and RSA host keys, both disabled by
 default in OpenSSH 8.8 and later. Direct `ssh` from Ubuntu 22.04 fails with "no
@@ -156,7 +171,7 @@ Resolved with a client configuration scoped to `10.99.*` only, so the exception
 applies to the legacy estate and not to every connection the host makes.
 Netmiko was unaffected because Paramiko still permits those algorithms.
 
-### 2.10 Emulated data planes are not suitable for bulk transfer
+### 2.11 Emulated data planes are not suitable for bulk transfer
 
 Installing packages on VM-AUTO through the campus network took over thirty
 minutes for `apt update` alone, because every packet crosses five
